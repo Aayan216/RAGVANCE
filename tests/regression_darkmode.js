@@ -79,12 +79,12 @@ function makeEnv(initialTheme) {
     return { sandbox, store, root, elements, docListeners };
 }
 
-const mainJs = fs.readFileSync(path.join(ROOT, 'core', 'static', 'js', 'main.js'), 'utf8');
+const mainJs = fs.readFileSync(path.join(ROOT, 'frontend', 'static', 'js', 'main.js'), 'utf8');
 
 // ============================================================
 // 1. base.html head init script
 // ============================================================
-const baseHtml = fs.readFileSync(path.join(ROOT, 'core', 'templates', 'core', 'base.html'), 'utf8');
+const baseHtml = fs.readFileSync(path.join(ROOT, 'frontend', 'templates', 'base.html'), 'utf8');
 const headScript = baseHtml.match(/<script>([\s\S]*?)<\/script>/)[1];
 
 // dark stored -> data-theme dark

@@ -11,7 +11,7 @@ function ok(label, cond, extra) {
 }
 
 // ---------- extract the single bare <script> from take_test.html ----------
-const tpl = fs.readFileSync(path.join(ROOT, 'core', 'templates', 'core', 'mock_test', 'take_test.html'), 'utf8');
+const tpl = fs.readFileSync(path.join(ROOT, 'frontend', 'templates', 'mock_test', 'take_test.html'), 'utf8');
 const blocks = [...tpl.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]);
 ok('exactly one bare script block', blocks.length === 1, blocks.length);
 const prepared = blocks.join('\n')

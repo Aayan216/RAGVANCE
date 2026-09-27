@@ -47,7 +47,7 @@ def upload_view(request):
         form = DocumentUploadForm()
     
     documents = Document.objects.all()
-    return render(request, "core/upload.html", {"form": form, "documents": documents})
+    return render(request, "upload.html", {"form": form, "documents": documents})
 
 
 @require_http_methods(["POST"])
@@ -145,7 +145,7 @@ def delete_document_view(request, doc_id):
 def tutor_view(request):
     """Tutor mode - Q&A interface."""
     form = TutorQuestionForm()
-    return render(request, "core/tutor.html", {"form": form})
+    return render(request, "tutor.html", {"form": form})
 
 
 @csrf_exempt
@@ -169,7 +169,7 @@ def tutor_ask_view(request):
 def practice_view(request):
     """Practice mode - MCQ generation and answering."""
     documents = Document.objects.filter(processed=True)
-    return render(request, "core/practice.html", {"documents": documents})
+    return render(request, "practice.html", {"documents": documents})
 
 
 @require_http_methods(["POST"])
@@ -263,7 +263,7 @@ def mock_test_settings_view(request):
 
         return JsonResponse({"redirect": f"/mock-test/{test.id}/"})
 
-    return render(request, "core/mock_test/settings.html", {"documents": documents})
+    return render(request, "mock_test/settings.html", {"documents": documents})
 
 
 def mock_test_start_view(request):
@@ -287,7 +287,7 @@ def mock_test_take_view(request, test_id):
 
     questions = mock_test_service.get_test_questions(test_id)
 
-    return render(request, "core/mock_test/take_test.html", {
+    return render(request, "mock_test/take_test.html", {
         "test": test,
         "questions": questions,
         "timer_seconds": test.timer_minutes * 60,
@@ -338,7 +338,7 @@ def mock_test_terminate_view(request):
 
 def mock_test_terminated_view(request):
     """Show exam terminated page."""
-    return render(request, "core/mock_test/terminated.html")
+    return render(request, "mock_test/terminated.html")
 
 
 def mock_test_result_view(request, attempt_id):
@@ -347,7 +347,7 @@ def mock_test_result_view(request, attempt_id):
     answers = UserAnswer.objects.filter(attempt=attempt)
     wrong_count = answers.filter(is_correct=False).exclude(selected_option="").count()
     unanswered_count = answers.filter(selected_option="").count()
-    return render(request, "core/mock_test/result.html", {
+    return render(request, "mock_test/result.html", {
         "attempt": attempt,
         "wrong_count": wrong_count,
         "unanswered_count": unanswered_count,
@@ -358,7 +358,7 @@ def mock_test_analysis_view(request, attempt_id):
     """Show performance analysis with charts."""
     attempt = get_object_or_404(TestAttempt, id=attempt_id)
     chart_data = analyzer.get_chart_data(attempt)
-    return render(request, "core/mock_test/analysis.html", {
+    return render(request, "mock_test/analysis.html", {
         "attempt": attempt,
         "chart_data": json.dumps(chart_data),
     })
@@ -368,7 +368,7 @@ def mock_test_review_view(request, attempt_id):
     """Review wrong answers with explanations."""
     attempt = get_object_or_404(TestAttempt, id=attempt_id)
     result = mock_test_service.get_attempt_result(attempt_id)
-    return render(request, "core/mock_test/review.html", {
+    return render(request, "mock_test/review.html", {
         "attempt": attempt,
         "wrong_questions": result["wrong"],
     })

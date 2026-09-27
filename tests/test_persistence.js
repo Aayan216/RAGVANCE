@@ -2,7 +2,7 @@ const fs = require('fs');
 const vm = require('vm');
 const path = require('path');
 
-const TEMPLATES = path.join(__dirname, '..', 'core', 'templates', 'core');
+const TEMPLATES = path.join(__dirname, '..', 'frontend', 'templates');
 
 function extractScripts(templateFile) {
     const html = fs.readFileSync(path.join(TEMPLATES, templateFile), 'utf8');
