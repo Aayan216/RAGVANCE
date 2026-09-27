@@ -1,0 +1,163 @@
+{% extends "core/base.html" %}
+{% block title %}Review Answers - RAGVANCE{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600)); color: var(--color-text-light);">
+                <h4 class="mb-0"><i class="bi bi-eye"></i> Review Wrong Answers</h4>
+                <a href="{% url 'mock_test_result' attempt.id %}" class="btn btn-light btn-sm">
+                    <i class="bi bi-arrow-left"></i> Back to Result
+                </a>
+            </div>
+            <div class="card-body">
+                {% if wrong_questions %}
+                    <p class="text-muted">You got <strong>{{ wrong_questions|length }}</strong> out of {{ attempt.total_questions }} questions wrong. Review them below.</p>
+                    
+                    {% for wq in wrong_questions %}
+                    <div class="card mb-4" style="border-color: var(--color-primary-200);">
+                        <div class="card-header d-flex justify-content-between" style="background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600)); color: var(--color-text-light);">
+                            <h5 class="mb-0">Question {{ forloop.counter }}</h5>
+                            <span class="badge" style="background: var(--color-secondary-300); color: var(--color-neutral-900);">{{ wq.topic|default:"General" }}</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="fw-bold">{{ wq.question_text }}</p>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="card" style="{% if wq.selected == 'A' %}border-color: var(--color-danger);{% endif %}">
+                                        <div class="card-body">
+                                            <strong>A.</strong> {{ wq.options.A }}
+                                            {% if wq.selected == 'A' %}
+                                                <span class="badge ms-2" style="background: var(--color-danger); color: var(--color-text-light);">Your Answer ✗</span>
+                                            {% elif wq.correct_answer == 'A' %}
+                                                <span class="badge ms-2" style="background: var(--color-success); color: var(--color-text-light);">Correct ✓</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card" style="{% if wq.selected == 'B' %}border-color: var(--color-danger);{% endif %}">
+                                        <div class="card-body">
+                                            <strong>B.</strong> {{ wq.options.B }}
+                                            {% if wq.selected == 'B' %}
+                                                <span class="badge ms-2" style="background: var(--color-danger); color: var(--color-text-light);">Your Answer ✗</span>
+                                            {% elif wq.correct_answer == 'B' %}
+                                                <span class="badge ms-2" style="background: var(--color-success); color: var(--color-text-light);">Correct ✓</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% if wq.question_type != "true_false" %}
+                                <div class="col-md-6">
+                                    <div class="card" style="{% if wq.selected == 'C' %}border-color: var(--color-danger);{% endif %}">
+                                        <div class="card-body">
+                                            <strong>C.</strong> {{ wq.options.C }}
+                                            {% if wq.selected == 'C' %}
+                                                <span class="badge ms-2" style="background: var(--color-danger); color: var(--color-text-light);">Your Answer ✗</span>
+                                            {% elif wq.correct_answer == 'C' %}
+                                                <span class="badge ms-2" style="background: var(--color-success); color: var(--color-text-light);">Correct ✓</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card" style="{% if wq.selected == 'D' %}border-color: var(--color-danger);{% endif %}">
+                                        <div class="card-body">
+                                            <strong>D.</strong> {{ wq.options.D }}
+                                            {% if wq.selected == 'D' %}
+                                                <span class="badge ms-2" style="background: var(--color-danger); color: var(--color-text-light);">Your Answer ✗</span>
+                                            {% elif wq.correct_answer == 'D' %}
+                                                <span class="badge ms-2" style="background: var(--color-success); color: var(--color-text-light);">Correct ✓</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="alert alert-info">
+                                <strong>Explanation:</strong> {{ wq.explanation }}
+                            </div>
+                            
+                            {% if wq.source_chunk_ids %}
+                            <div class="mt-3">
+                                <button class="btn btn-sm btn-outline-secondary" onclick="showSources({{ wq.source_chunk_ids|safe }})">
+                                    <i class="bi bi-file-text"></i> View Source Context
+                                </button>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-check-circle-fill" style="font-size: 4rem; color: var(--color-success);"></i>
+                        <h3 class="mt-3" style="color: var(--color-success);">Perfect Score!</h3>
+                        <p class="text-muted">You got all questions correct. Great job!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Source Modal -->
+<div class="modal fade" id="sourceModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Source Context</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="sourceContent"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function showSources(chunkIds) {
+    const modal = new bootstrap.Modal(document.getElementById('sourceModal'));
+    const content = document.getElementById('sourceContent');
+    content.innerHTML = '<div class="text-center py-3"><div class="spinner-border"></div></div>';
+    modal.show();
+    
+    try {
+        const response = await fetch('{% url "tutor_ask" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: JSON.stringify({ question: 'Show source context for chunks: ' + chunkIds.join(',') })
+        });
+        
+        const data = await response.json();
+        if (data.sources && data.sources.length > 0) {
+            let html = '';
+            data.sources.forEach((src, i) => {
+                html += `
+                    <div class="card mb-2">
+                        <div class="card-header">
+                            <strong>[doc_${src.doc_id}:chunk_${src.chunk_index}]</strong> 
+                            ${src.file_name} (Page ${src.page_number})
+                        </div>
+                        <div class="card-body">
+                            <pre class="mb-0 small">${src.text}</pre>
+                        </div>
+                    </div>
+                `;
+            });
+            content.innerHTML = html;
+        } else {
+            content.innerHTML = '<p class="text-muted">No source context available.</p>';
+        }
+    } catch (err) {
+        content.innerHTML = '<p class="text-danger">Error loading sources: ' + err.message + '</p>';
+    }
+}
+</script>
+{% endblock %}

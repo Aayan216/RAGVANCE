@@ -1,0 +1,480 @@
+{% extends "core/base.html" %}
+{% block title %}Take Mock Test - RAGVANCE{% endblock %}
+
+{% block content %}
+<!-- Fullscreen Error -->
+<div id="fullscreenError" class="d-none">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card text-center">
+                <div class="card-body py-5">
+                    <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(220,53,69,0.1); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                        <i class="bi bi-fullscreen-exit" style="font-size: 2rem; color: var(--color-danger);"></i>
+                    </div>
+                    <h4>Fullscreen Required</h4>
+                    <p class="text-muted mb-4">Mock test requires fullscreen mode. Please allow fullscreen to start the exam.</p>
+                    <button class="btn btn-lg" style="background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600)); color: var(--color-text-light); border: none; padding: 0.75rem 2rem; font-weight: 600;" onclick="initExam()">
+                        <i class="bi bi-fullscreen me-2"></i>Enter Fullscreen
+                    </button>
+                    <div class="mt-3">
+                        <a href="{% url 'mock_test_settings' %}" class="text-muted" style="font-size: 0.85rem;"><i class="bi bi-arrow-left me-1"></i>Back to Settings</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Exam Content -->
+<div id="examContent" class="d-none">
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600)); color: var(--color-text-light);">
+            <h4 class="mb-0"><i class="bi bi-stopwatch"></i> Mock Test</h4>
+            <div class="d-flex align-items-center gap-3">
+                <span>Question <span id="currentQ">1</span> of {{ questions|length }}</span>
+                <div id="timer" class="fs-4 fw-bold font-monospace" style="color: #fff; min-width: 80px; text-align: center;">00:00</div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="d-flex">
+                <!-- Question Navigator -->
+                <div id="navPanel" class="border-end p-3" style="width: 220px; min-height: 500px; overflow-y: auto;">
+                    <h6 class="mb-3" style="font-size: 0.85rem;">Question Navigator</h6>
+                    <div class="d-flex flex-wrap gap-1 mb-3" id="navGrid">
+                        {% for q in questions %}
+                            <button type="button" class="btn btn-sm nav-btn" style="width: 36px; height: 36px; font-size: 0.75rem; padding: 0;"
+                                    data-index="{{ forloop.counter0 }}" onclick="goToQuestion({{ forloop.counter0 }})">
+                                {{ forloop.counter }}
+                            </button>
+                        {% endfor %}
+                    </div>
+                    <hr style="margin: 0.5rem 0;">
+                    <div class="mt-2" style="font-size: 0.8rem;">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Answered:</span>
+                            <strong id="answeredCount" style="color: var(--color-success);">0</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Unanswered:</span>
+                            <strong id="unansweredCount" style="color: var(--color-danger);">{{ questions|length }}</strong>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-sm w-100" style="background: var(--color-primary-500); color: var(--color-text-light); font-weight: 600;" onclick="confirmSubmit()">
+                            <i class="bi bi-check-lg me-1"></i>Submit Test
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Question Content -->
+                <div id="questionPanel" class="flex-grow-1 p-4" style="min-height: 500px;">
+                    {% for q in questions %}
+                    <div class="question-card d-none" data-index="{{ forloop.counter0 }}">
+                        <h5 class="mb-4">{{ forloop.counter }}. {{ q.question_text }}</h5>
+                        <div class="options">
+                            {% if q.question_type == "true_false" %}
+                            <div class="form-check mb-3 p-3 rounded-3" style="background: var(--color-neutral-50); border: 1px solid var(--color-neutral-200); transition: all 0.15s; cursor: pointer;">
+                                <input class="form-check-input" type="radio" name="q{{ q.id }}" id="q{{ q.id }}_A" value="A" style="margin-top: 0.15rem;">
+                                <label class="form-check-label w-100 ms-2" for="q{{ q.id }}_A" style="cursor: pointer;">
+                                    <strong>A.</strong> {{ q.option_a }}
+                                </label>
+                            </div>
+                            <div class="form-check mb-3 p-3 rounded-3" style="background: var(--color-neutral-50); border: 1px solid var(--color-neutral-200); transition: all 0.15s; cursor: pointer;">
+                                <input class="form-check-input" type="radio" name="q{{ q.id }}" id="q{{ q.id }}_B" value="B" style="margin-top: 0.15rem;">
+                                <label class="form-check-label w-100 ms-2" for="q{{ q.id }}_B" style="cursor: pointer;">
+                                    <strong>B.</strong> {{ q.option_b }}
+                                </label>
+                            </div>
+                            {% else %}
+                            <div class="form-check mb-3 p-3 rounded-3" style="background: var(--color-neutral-50); border: 1px solid var(--color-neutral-200); transition: all 0.15s; cursor: pointer;">
+                                <input class="form-check-input" type="radio" name="q{{ q.id }}" id="q{{ q.id }}_A" value="A" style="margin-top: 0.15rem;">
+                                <label class="form-check-label w-100 ms-2" for="q{{ q.id }}_A" style="cursor: pointer;">
+                                    <strong>A.</strong> {{ q.option_a }}
+                                </label>
+                            </div>
+                            <div class="form-check mb-3 p-3 rounded-3" style="background: var(--color-neutral-50); border: 1px solid var(--color-neutral-200); transition: all 0.15s; cursor: pointer;">
+                                <input class="form-check-input" type="radio" name="q{{ q.id }}" id="q{{ q.id }}_B" value="B" style="margin-top: 0.15rem;">
+                                <label class="form-check-label w-100 ms-2" for="q{{ q.id }}_B" style="cursor: pointer;">
+                                    <strong>B.</strong> {{ q.option_b }}
+                                </label>
+                            </div>
+                            <div class="form-check mb-3 p-3 rounded-3" style="background: var(--color-neutral-50); border: 1px solid var(--color-neutral-200); transition: all 0.15s; cursor: pointer;">
+                                <input class="form-check-input" type="radio" name="q{{ q.id }}" id="q{{ q.id }}_C" value="C" style="margin-top: 0.15rem;">
+                                <label class="form-check-label w-100 ms-2" for="q{{ q.id }}_C" style="cursor: pointer;">
+                                    <strong>C.</strong> {{ q.option_c }}
+                                </label>
+                            </div>
+                            <div class="form-check mb-3 p-3 rounded-3" style="background: var(--color-neutral-50); border: 1px solid var(--color-neutral-200); transition: all 0.15s; cursor: pointer;">
+                                <input class="form-check-input" type="radio" name="q{{ q.id }}" id="q{{ q.id }}_D" value="D" style="margin-top: 0.15rem;">
+                                <label class="form-check-label w-100 ms-2" for="q{{ q.id }}_D" style="cursor: pointer;">
+                                    <strong>D.</strong> {{ q.option_d }}
+                                </label>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="card-footer d-flex justify-content-between">
+            <button id="prevBtn" class="btn btn-outline-secondary" onclick="prevQuestion()" disabled>
+                <i class="bi bi-chevron-left"></i> Previous
+            </button>
+            <div class="d-flex gap-2">
+                <button id="nextBtn" class="btn" style="background: var(--color-primary-500); color: var(--color-text-light);" onclick="nextQuestion()">
+                    Next <i class="bi bi-chevron-right"></i>
+                </button>
+                <button id="finishBtn" class="btn d-none" style="background: var(--color-primary-500); color: var(--color-text-light); font-weight: 600;" onclick="confirmSubmit()">
+                    <i class="bi bi-check-lg me-1"></i>Finish & Submit
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Submit Confirmation Modal -->
+<div class="modal fade" id="submitModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600)); color: var(--color-text-light);">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Submit Test?</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row text-center mb-3">
+                    <div class="col">
+                        <div class="p-2 rounded" style="background: rgba(76,175,80,0.1);">
+                            <div class="fs-5 fw-bold" style="color: var(--color-success);" id="modalAnswered">0</div>
+                            <small class="text-muted">Answered</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="p-2 rounded" style="background: rgba(220,53,69,0.1);">
+                            <div class="fs-5 fw-bold" style="color: var(--color-danger);" id="modalUnanswered">0</div>
+                            <small class="text-muted">Unanswered</small>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-muted text-center mb-0">Once submitted, you cannot change your answers.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn" style="background: var(--color-primary-500); color: var(--color-text-light); font-weight: 600;" onclick="submitExam()">
+                    <i class="bi bi-check-lg me-1"></i>Submit Test
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+    .navbar, footer {
+        display: none !important;
+    }
+    main.container {
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        max-width: 100% !important;
+    }
+    .nav-btn {
+        border: 1px solid var(--color-neutral-200);
+        background: var(--color-surface-raised);
+        color: var(--color-neutral-700);
+        transition: all 0.15s;
+    }
+    .nav-btn:hover {
+        border-color: var(--color-primary-400);
+        color: var(--color-primary-600);
+    }
+    .nav-btn.answered {
+        background: var(--color-success);
+        border-color: var(--color-success);
+        color: white;
+    }
+    .nav-btn.current {
+        background: var(--color-primary-500);
+        border-color: var(--color-primary-500);
+        color: white;
+    }
+    .form-check-input:checked {
+        background-color: var(--color-primary-500);
+        border-color: var(--color-primary-500);
+    }
+    .timer-warning {
+        color: #ffc107 !important;
+    }
+    .timer-danger {
+        color: var(--color-danger) !important;
+        animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+</style>
+<script>
+let currentIndex = 0;
+const totalQuestions = {{ questions|length }};
+let timerSeconds = {{ timer_seconds }};
+let timerInterval;
+let answers = {};
+let examStatus = 'waiting';  // waiting, active, completed, terminated
+
+const testId = {{ test.id }};
+const attemptId = {{ attempt_id }};
+
+const terminateUrl = '{% url "mock_test_terminate" %}';
+const terminatedUrl = '{% url "mock_test_terminated" %}';
+const submitUrl = '{% url "mock_test_submit" test.id %}';
+const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+const questionsData = [
+    {% for q in questions %}
+    { id: {{ q.id }}, index: {{ forloop.counter0 }} }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+// ===== FULLSCREEN =====
+async function initExam() {
+    try {
+        await document.documentElement.requestFullscreen();
+    } catch (err) {
+        document.getElementById('fullscreenError').classList.remove('d-none');
+        document.getElementById('examContent').classList.add('d-none');
+        return;
+    }
+    document.getElementById('fullscreenError').classList.add('d-none');
+    document.getElementById('examContent').classList.remove('d-none');
+    examStatus = 'active';
+    startTimer();
+    showQuestion(0);
+    updateNavButtons();
+    updateProgress();
+}
+
+document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && examStatus === 'active') {
+        terminateExam();
+    }
+});
+
+async function terminateExam() {
+    examStatus = 'terminated';
+    stopTimer();
+
+    try {
+        await fetch(terminateUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({ test_id: testId, attempt_id: attemptId }),
+            keepalive: true,
+        });
+    } catch (err) {
+        // Terminate request failed, still redirect
+    }
+
+    window.location.href = terminatedUrl;
+}
+
+// ===== TIMER =====
+function startTimer() {
+    updateTimerDisplay();
+    timerInterval = setInterval(() => {
+        timerSeconds--;
+        updateTimerDisplay();
+
+        if (timerSeconds <= 0) {
+            clearInterval(timerInterval);
+            onTimerExpired();
+        }
+    }, 1000);
+}
+
+function stopTimer() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+}
+
+function updateTimerDisplay() {
+    const mins = Math.floor(timerSeconds / 60);
+    const secs = timerSeconds % 60;
+    const timerEl = document.getElementById('timer');
+    timerEl.textContent = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+    timerEl.classList.remove('timer-warning', 'timer-danger');
+    if (timerSeconds <= 60) {
+        timerEl.classList.add('timer-danger');
+    } else if (timerSeconds <= 300) {
+        timerEl.classList.add('timer-warning');
+    }
+}
+
+function onTimerExpired() {
+    examStatus = 'completed';
+    submitExam();
+}
+
+// ===== NAVIGATION =====
+function showQuestion(index) {
+    if (index < 0 || index >= totalQuestions) return;
+
+    currentIndex = index;
+    document.querySelectorAll('.question-card').forEach((card, i) => {
+        card.classList.toggle('d-none', i !== index);
+    });
+    document.getElementById('currentQ').textContent = index + 1;
+
+    updateNavButtons();
+    updateProgress();
+}
+
+function goToQuestion(index) {
+    showQuestion(index);
+}
+
+function prevQuestion() {
+    if (currentIndex > 0) {
+        showQuestion(currentIndex - 1);
+    }
+}
+
+function nextQuestion() {
+    if (currentIndex < totalQuestions - 1) {
+        showQuestion(currentIndex + 1);
+    }
+}
+
+function updateNavButtons() {
+    document.getElementById('prevBtn').disabled = currentIndex === 0;
+
+    const isLast = currentIndex === totalQuestions - 1;
+    document.getElementById('nextBtn').classList.toggle('d-none', isLast);
+    document.getElementById('finishBtn').classList.toggle('d-none', !isLast);
+}
+
+function updateProgress() {
+    document.querySelectorAll('.nav-btn').forEach((btn, i) => {
+        const qid = questionsData[i].id;
+        const hasAnswer = answers[qid] !== undefined;
+        const isCurrent = i === currentIndex;
+
+        btn.classList.remove('answered', 'current');
+        if (hasAnswer) {
+            btn.classList.add('answered');
+        } else if (isCurrent) {
+            btn.classList.add('current');
+        }
+    });
+
+    const answered = Object.keys(answers).length;
+    document.getElementById('answeredCount').textContent = answered;
+    document.getElementById('unansweredCount').textContent = totalQuestions - answered;
+}
+
+// ===== ANSWER TRACKING =====
+document.addEventListener('change', (e) => {
+    if (e.target.type === 'radio' && e.target.name.startsWith('q')) {
+        const qid = parseInt(e.target.name.substring(1));
+        answers[qid] = e.target.value;
+        updateProgress();
+    }
+});
+
+function collectAnswers() {
+    const collected = {};
+    questionsData.forEach(q => {
+        const selected = document.querySelector(`input[name="q${q.id}"]:checked`);
+        if (selected) {
+            collected[q.id] = selected.value;
+        }
+    });
+    return collected;
+}
+
+// ===== SUBMISSION =====
+function confirmSubmit() {
+    const answered = Object.keys(answers).length;
+    const unanswered = totalQuestions - answered;
+
+    document.getElementById('modalAnswered').textContent = answered;
+    document.getElementById('modalUnanswered').textContent = unanswered;
+
+    new bootstrap.Modal(document.getElementById('submitModal')).show();
+}
+
+async function submitExam() {
+    // Close modal if open
+    const modal = bootstrap.Modal.getInstance(document.getElementById('submitModal'));
+    if (modal) modal.hide();
+
+    if (examStatus === 'completed') {
+        // Already marked completed (timer expired)
+    } else {
+        examStatus = 'completed';
+    }
+    stopTimer();
+
+    const collectedAnswers = collectAnswers();
+    const timeTaken = {{ timer_seconds }} - timerSeconds;
+
+    // Disable UI
+    document.querySelectorAll('input, button').forEach(el => el.disabled = true);
+    document.getElementById('timer').textContent = 'Submitting...';
+
+    try {
+        const response = await fetch(submitUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+            },
+            body: JSON.stringify({
+                answers: collectedAnswers,
+                time_taken: timeTaken,
+                attempt_id: attemptId,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (data.redirect) {
+            // Exit fullscreen AFTER backend confirms completion
+            if (document.fullscreenElement) {
+                try {
+                    await document.exitFullscreen();
+                } catch (e) {
+                    // Fullscreen exit failed, still redirect
+                }
+            }
+            window.location.href = data.redirect;
+        } else {
+            showToast('error', data.error || 'Submission failed.');
+            examStatus = 'active';
+            document.querySelectorAll('input, button').forEach(el => el.disabled = false);
+            startTimer();
+        }
+    } catch (err) {
+        showToast('error', 'Submission failed. Please try again.');
+        examStatus = 'active';
+        document.querySelectorAll('input, button').forEach(el => el.disabled = false);
+        startTimer();
+    }
+}
+
+function showToast(type, message) {
+    // Simple alert fallback for critical errors during exam
+    alert(message);
+}
+
+// ===== INIT =====
+initExam();
+</script>
+{% endblock %}

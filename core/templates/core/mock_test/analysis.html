@@ -1,0 +1,170 @@
+{% extends "core/base.html" %}
+{% block title %}Performance Analysis - RAGVANCE{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="bi bi-graph-up"></i> Performance Analysis</h4>
+                <a href="{% url 'mock_test_result' attempt.id %}" class="btn btn-light btn-sm">
+                    <i class="bi bi-arrow-left"></i> Back to Result
+                </a>
+            </div>
+            <div class="card-body">
+                <!-- Score Overview -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card" style="background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600)); color: var(--color-text-light);">
+                            <div class="card-body text-center">
+                                <h2>{{ attempt.percentage|floatformat:1 }}%</h2>
+                                <p class="mb-0">Overall Score</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card" style="background: linear-gradient(135deg, var(--color-success), #388e3c); color: var(--color-text-light);">
+                            <div class="card-body text-center">
+                                <h2>{{ attempt.score }} / {{ attempt.total_questions }}</h2>
+                                <p class="mb-0">Correct Answers</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card" style="background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600)); color: var(--color-text-light);">
+                            <div class="card-body text-center">
+                                <h2>{{ attempt.time_taken_seconds|divisibleby:60|yesno:"0:" }}{{ attempt.time_taken_seconds|time:"i:s" }}</h2>
+                                <p class="mb-0">Time Taken</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header"><h6>Score Distribution</h6></div>
+                            <div class="card-body">
+                                <canvas id="scoreChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header"><h6>Difficulty Breakdown</h6></div>
+                            <div class="card-body">
+                                <canvas id="difficultyChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header"><h6>Topic Accuracy</h6></div>
+                    <div class="card-body">
+                        <canvas id="topicChart" height="300"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Weak/Strong Topics -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header" style="background: linear-gradient(135deg, var(--color-danger), #c82333); color: var(--color-text-light);"><h6><i class="bi bi-arrow-down-circle"></i> Weak Topics</h6></div>
+                            <div class="card-body">
+                                {% if chart_data.weak_topics %}
+                                    <ul class="list-group list-group-flush">
+                                        {% for topic in chart_data.weak_topics %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span>{{ topic.topic }}</span>
+                                            <span class="badge bg-danger">{{ topic.accuracy|floatformat:0 }}%</span>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p class="text-muted text-center py-3">No weak topics identified</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header" style="background: linear-gradient(135deg, var(--color-success), #388e3c); color: var(--color-text-light);"><h6><i class="bi bi-arrow-up-circle"></i> Strong Topics</h6></div>
+                            <div class="card-body">
+                                {% if chart_data.strong_topics %}
+                                    <ul class="list-group list-group-flush">
+                                        {% for topic in chart_data.strong_topics %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <span>{{ topic.topic }}</span>
+                                            <span class="badge bg-success">{{ topic.accuracy|floatformat:0 }}%</span>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p class="text-muted text-center py-3">No strong topics identified</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const chartData = {{ chart_data|safe }};
+
+// Score Chart - Doughnut
+new Chart(document.getElementById('scoreChart'), {
+    type: 'doughnut',
+    data: chartData.score,
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: { position: 'bottom' },
+            title: { display: true, text: 'Correct vs Incorrect' }
+        }
+    }
+});
+
+// Topic Chart - Bar
+new Chart(document.getElementById('topicChart'), {
+    type: 'bar',
+    data: chartData.topics,
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        indexAxis: 'y',
+        plugins: {
+            legend: { display: false },
+            title: { display: true, text: 'Accuracy by Topic (%)' }
+        },
+        scales: {
+            x: { min: 0, max: 100, title: { display: true, text: 'Accuracy %' } }
+        }
+    }
+});
+
+// Difficulty Chart - Radar
+new Chart(document.getElementById('difficultyChart'), {
+    type: 'radar',
+    data: chartData.difficulty,
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: { position: 'bottom' },
+            title: { display: true, text: 'Accuracy by Difficulty' }
+        },
+        scales: {
+            r: { min: 0, max: 100, ticks: { stepSize: 25 } }
+        }
+    }
+});
+</script>
+{% endblock %}

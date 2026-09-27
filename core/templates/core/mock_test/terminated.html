@@ -1,0 +1,24 @@
+{% extends "core/base.html" %}
+{% block title %}Exam Terminated - RAGVANCE{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card text-center">
+            <div class="card-body py-5">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(220,53,69,0.1); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;">
+                    <i class="bi bi-exclamation-triangle-fill" style="font-size: 2.5rem; color: var(--color-danger);"></i>
+                </div>
+                <h3 class="fw-bold" style="color: var(--color-danger);">Exam Terminated</h3>
+                <p class="text-muted mt-3 mb-4" style="font-size: 0.95rem; line-height: 1.6;">
+                    The mock test was stopped because fullscreen mode was exited.
+                    <br>This test cannot be resumed.
+                </p>
+                <a href="{% url 'mock_test_settings' %}" class="btn btn-lg" style="background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600)); color: var(--color-text-light); border: none; padding: 0.75rem 2rem; font-weight: 600;">
+                    <i class="bi bi-arrow-left me-2"></i>Back to Mock Tests
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

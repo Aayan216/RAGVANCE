@@ -1,0 +1,489 @@
+@import url('colors.css');
+
+/* ========================================
+   Bootstrap Override — RAGVANCE Palette
+   ======================================== */
+:root {
+    --bs-primary: var(--color-primary-500);
+    --bs-primary-rgb: 3, 83, 82;
+    --bs-success: var(--color-success);
+    --bs-success-rgb: 76, 175, 80;
+    --bs-warning: var(--color-warning);
+    --bs-warning-rgb: 245, 158, 11;
+    --bs-danger: var(--color-danger);
+    --bs-danger-rgb: 220, 53, 69;
+    --bs-info: var(--color-info);
+    --bs-info-rgb: 3, 83, 82;
+    --bs-secondary: var(--color-secondary-600);
+    --bs-secondary-rgb: 196, 160, 46;
+}
+
+/* ========================================
+   Navbar
+   ======================================== */
+.navbar {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-700)) !important;
+}
+
+.navbar-brand {
+    color: var(--color-text-light) !important;
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.navbar-logo {
+    height: 48px;
+    width: auto;
+    max-width: 220px;
+    object-fit: contain;
+    display: block;
+}
+
+.navbar .nav-link {
+    color: rgba(255, 255, 255, 0.85) !important;
+    transition: color 0.2s;
+}
+
+.navbar .nav-link:hover {
+    color: var(--color-secondary-300) !important;
+}
+
+/* ========================================
+   Body & Page Background
+   ======================================== */
+body {
+    background-color: var(--color-neutral-50);
+    color: var(--color-neutral-800);
+}
+
+/* ========================================
+   Cards
+   ======================================== */
+.card {
+    border: 1px solid var(--color-neutral-200);
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.card-header {
+    border-radius: 0.75rem 0.75rem 0 0 !important;
+    font-weight: 600;
+    border-bottom: 1px solid var(--color-neutral-200);
+}
+
+.card-header.bg-primary {
+    background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600)) !important;
+    color: var(--color-text-light) !important;
+}
+
+.card-header.bg-danger {
+    background: linear-gradient(135deg, var(--color-danger), #c82333) !important;
+    color: var(--color-text-light) !important;
+}
+
+.card-header.bg-success {
+    background: linear-gradient(135deg, var(--color-success), #388e3c) !important;
+    color: var(--color-text-light) !important;
+}
+
+.card-header.bg-secondary {
+    background: linear-gradient(135deg, var(--color-secondary-600), var(--color-secondary-700)) !important;
+    color: var(--color-text-light) !important;
+}
+
+/* ========================================
+   Buttons — primary uses teal, accent for CTA
+   ======================================== */
+.btn-primary {
+    background: var(--color-primary-500);
+    border-color: var(--color-primary-500);
+    color: var(--color-text-light);
+}
+
+.btn-primary:hover,
+.btn-primary:active {
+    background: var(--color-primary-600);
+    border-color: var(--color-primary-600);
+    color: var(--color-text-light);
+}
+
+.btn-outline-primary {
+    color: var(--color-primary-500);
+    border-color: var(--color-primary-500);
+}
+
+.btn-outline-primary:hover {
+    background: var(--color-primary-500);
+    color: var(--color-text-light);
+}
+
+.btn-success {
+    background: var(--color-success);
+    border-color: var(--color-success);
+    color: var(--color-text-light);
+}
+
+.btn-success:hover {
+    background: #43a047;
+    border-color: #43a047;
+    color: var(--color-text-light);
+}
+
+.btn-danger {
+    background: var(--color-danger);
+    border-color: var(--color-danger);
+    color: var(--color-text-light);
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    border-color: #c82333;
+    color: var(--color-text-light);
+}
+
+.btn-warning {
+    background: var(--color-warning);
+    border-color: var(--color-warning);
+    color: var(--color-neutral-900);
+}
+
+.btn-warning:hover {
+    background: #e08e0b;
+    border-color: #e08e0b;
+    color: var(--color-neutral-900);
+}
+
+/* ========================================
+   Nav Buttons (test navigator)
+   ======================================== */
+.nav-btn {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+}
+
+.nav-btn.btn-success {
+    background-color: var(--color-success) !important;
+    border-color: var(--color-success) !important;
+    color: var(--color-text-light) !important;
+}
+
+.nav-btn.btn-warning {
+    background-color: var(--color-warning) !important;
+    border-color: var(--color-warning) !important;
+    color: var(--color-neutral-900) !important;
+}
+
+/* ========================================
+   Form Controls
+   ======================================== */
+.form-control,
+.form-select {
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-neutral-200);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--color-primary-400);
+    box-shadow: 0 0 0 0.2rem rgba(3, 83, 82, 0.15);
+}
+
+.form-check-input:checked {
+    background-color: var(--color-primary-500);
+    border-color: var(--color-primary-500);
+}
+
+/* ========================================
+   Chat / Message Bubbles
+   ======================================== */
+.chat-container {
+    background: var(--color-neutral-100);
+}
+
+.message-bubble {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    line-height: 1.6;
+}
+
+.message-bubble.bg-primary {
+    background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600)) !important;
+    color: var(--color-text-light);
+}
+
+.message-bubble.assistant-bubble {
+    background: var(--color-neutral-50);
+}
+
+html[data-theme="dark"] .message-bubble.assistant-bubble {
+    background: var(--color-neutral-100);
+}
+
+.source-item {
+    background: var(--color-neutral-100);
+    border-radius: 4px;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-left: 3px solid var(--color-primary-400);
+}
+
+/* ========================================
+   Badges
+   ======================================== */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.4em 0.6em;
+}
+
+.badge.bg-info {
+    background-color: var(--color-info) !important;
+    color: var(--color-text-light);
+}
+
+.badge.bg-success {
+    background-color: var(--color-success) !important;
+    color: var(--color-text-light);
+}
+
+.badge.bg-danger {
+    background-color: var(--color-danger) !important;
+    color: var(--color-text-light);
+}
+
+.badge.bg-warning {
+    background-color: var(--color-warning) !important;
+    color: var(--color-neutral-900);
+}
+
+/* ========================================
+   Alerts
+   ======================================== */
+.alert {
+    border-radius: 0.5rem;
+    border: none;
+}
+
+.alert-success {
+    background-color: rgba(76, 175, 80, 0.12);
+    color: #2e7d32;
+    border-left: 4px solid var(--color-success);
+}
+
+.alert-danger {
+    background-color: rgba(220, 53, 69, 0.12);
+    color: #c62828;
+    border-left: 4px solid var(--color-danger);
+}
+
+.alert-warning {
+    background-color: rgba(245, 158, 11, 0.12);
+    color: #e65100;
+    border-left: 4px solid var(--color-warning);
+}
+
+.alert-info {
+    background-color: rgba(3, 83, 82, 0.1);
+    color: var(--color-primary-700);
+    border-left: 4px solid var(--color-info);
+}
+
+/* ========================================
+   Tables
+   ======================================== */
+.table th {
+    font-weight: 600;
+    border-bottom: 2px solid var(--color-neutral-200);
+    color: var(--color-neutral-700);
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--color-neutral-100);
+}
+
+/* ========================================
+   Score Circle (result page)
+   ======================================== */
+.score-circle {
+    transition: all 0.3s ease;
+}
+
+/* ========================================
+   Modal
+   ======================================== */
+.modal-content {
+    border-radius: 1rem;
+    border: none;
+}
+
+.modal-header {
+    border-radius: 1rem 1rem 0 0;
+}
+
+.modal-header.bg-primary {
+    background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600)) !important;
+    color: var(--color-text-light) !important;
+}
+
+.modal-header.bg-danger {
+    background: linear-gradient(135deg, var(--color-danger), #c82333) !important;
+    color: var(--color-text-light) !important;
+}
+
+/* ========================================
+   Progress Bar
+   ======================================== */
+.progress {
+    height: 6px;
+    border-radius: 3px;
+    background-color: var(--color-neutral-200);
+}
+
+/* ========================================
+   Footer
+   ======================================== */
+footer {
+    color: var(--color-text-muted);
+    border-top-color: var(--color-neutral-200) !important;
+}
+
+/* ========================================
+   Spinner
+   ======================================== */
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+.text-primary { color: var(--color-primary-500) !important; }
+.text-success { color: var(--color-success) !important; }
+.text-danger  { color: var(--color-danger) !important; }
+.text-warning { color: var(--color-warning) !important; }
+
+/* ========================================
+   Responsive
+   ======================================== */
+@media (max-width: 768px) {
+    #navPanel {
+        display: none;
+    }
+
+    .chat-container {
+        height: 400px !important;
+    }
+}
+
+/* ========================================
+   Animation
+   ======================================== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.feedback-panel {
+    animation: fadeIn 0.3s ease;
+}
+
+/* ========================================
+   Dark Theme — Charcoal refinements
+   ======================================== */
+html[data-theme="dark"] .form-control,
+html[data-theme="dark"] .form-select {
+    background-color: #303030;
+    border-color: #3A3A3A;
+    color: #F5F5F5;
+}
+
+html[data-theme="dark"] .form-control:focus,
+html[data-theme="dark"] .form-select:focus {
+    background-color: #303030;
+    border-color: var(--color-primary-400);
+    color: #F5F5F5;
+    box-shadow: 0 0 0 0.2rem rgba(3, 83, 82, 0.35);
+}
+
+html[data-theme="dark"] .form-control::placeholder {
+    color: #B5B5B5;
+}
+
+html[data-theme="dark"] .form-check-input {
+    background-color: #303030;
+    border-color: #3A3A3A;
+}
+
+html[data-theme="dark"] .form-check-input:checked {
+    background-color: var(--color-primary-500);
+    border-color: var(--color-primary-500);
+}
+
+html[data-theme="dark"] .card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme="dark"] .modal-content {
+    background-color: #2A2A2A;
+    color: #F5F5F5;
+}
+
+html[data-theme="dark"] .modal-content .form-control,
+html[data-theme="dark"] .modal-content .form-select {
+    background-color: #303030;
+    color: #F5F5F5;
+}
+
+/* Score circle — lighten teal percentage text on charcoal */
+html[data-theme="dark"] .score-circle span {
+    color: var(--color-primary-200) !important;
+}
+
+/* Alerts — lighter text for dark background */
+html[data-theme="dark"] .alert-success { color: #81C784; }
+html[data-theme="dark"] .alert-danger  { color: #EF9A9A; }
+html[data-theme="dark"] .alert-warning { color: #FFD180; }
+html[data-theme="dark"] .alert-info    { color: #80C9C9; }
+
+/* Scrollbar */
+html[data-theme="dark"]::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+html[data-theme="dark"]::-webkit-scrollbar-track {
+    background: #222222;
+}
+html[data-theme="dark"]::-webkit-scrollbar-thumb {
+    background: #3A3A3A;
+    border-radius: 5px;
+}
+html[data-theme="dark"]::-webkit-scrollbar-thumb:hover {
+    background: #454545;
+}
+
+/* Theme toggle button (navbar) */
+.theme-toggle {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.85);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin-right: 0.75rem;
+    font-size: 1rem;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    flex-shrink: 0;
+}
+
+.theme-toggle:hover,
+.theme-toggle:focus-visible {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.6);
+}

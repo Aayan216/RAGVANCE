@@ -1,0 +1,226 @@
+{% extends "core/base.html" %}
+{% block title %}Upload Files - RAGVANCE{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="bi bi-upload"></i> Upload Study Materials</h4>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" id="uploadForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">{{ form.title.label }}</label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="text-danger small">{{ form.title.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.file.id_for_label }}" class="form-label">{{ form.file.label }}</label>
+                        {{ form.file }}
+                        {% if form.file.errors %}
+                            <div class="text-danger small">{{ form.file.errors }}</div>
+                        {% endif %}
+                        <div class="form-text">Supported: PDF, DOCX, PPTX, TXT</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-cloud-upload"></i> Upload
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header" style="background: linear-gradient(135deg, var(--color-primary-600), var(--color-primary-700)); color: var(--color-text-light);">
+                <h4 class="mb-0"><i class="bi bi-files"></i> Your Documents</h4>
+            </div>
+            <div class="card-body">
+                {% if documents %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Chunks</th>
+                                    <th>Uploaded</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doc in documents %}
+                                <tr id="doc-{{ doc.id }}">
+                                    <td>{{ doc.title }}</td>
+                                    <td><span class="badge bg-info">{{ doc.get_file_type_display }}</span></td>
+                                    <td>
+                                        {% if doc.processed %}
+                                            <span class="badge bg-success">Ready</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ doc.chunk_count }}</td>
+                                    <td>{{ doc.uploaded_at|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        {% if not doc.processed %}
+                                            <button class="btn btn-sm btn-outline-primary process-btn" 
+                                                    data-doc-id="{{ doc.id }}"
+                                                    onclick="processDocument({{ doc.id }})">
+                                                <i class="bi bi-gear"></i> Process
+                                            </button>
+                                        {% else %}
+                                            <span class="text-muted me-2">Ready for study</span>
+                                        {% endif %}
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                onclick="confirmDelete({{ doc.id }}, '{{ doc.title|escapejs }}')">
+                                            <i class="bi bi-trash"></i> Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted text-center py-4">No documents uploaded yet. Upload your first study material above!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header" style="background: var(--color-danger); color: var(--color-text-light);">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Delete Document?</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to permanently delete "<strong id="deleteDocName"></strong>"?</p>
+                <p class="text-muted small mb-0">This will remove the uploaded file, its processed chunks, embeddings/vector data, and all associated document data from the application. This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="bi bi-trash"></i> Delete Permanently
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
+    <div id="successToast" class="toast align-items-center border-0" role="alert"
+         style="background: var(--color-success); color: var(--color-text-light);">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <span id="successToastMsg"></span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
+    <div id="errorToast" class="toast align-items-center border-0" role="alert"
+         style="background: var(--color-danger); color: var(--color-text-light);">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="bi bi-exclamation-circle-fill me-2"></i>
+                <span id="errorToastMsg"></span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showToast(type, message) {
+    const toastId = type === 'success' ? 'successToast' : 'errorToast';
+    const msgId = type === 'success' ? 'successToastMsg' : 'errorToastMsg';
+    document.getElementById(msgId).textContent = message;
+    new bootstrap.Toast(document.getElementById(toastId), { delay: 4000 }).show();
+}
+
+function processDocument(docId) {
+    const btn = document.querySelector(`[data-doc-id="${docId}"]`);
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Processing...';
+    
+    fetch(`{% url 'process_document' 0 %}`.replace('0', docId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else if (data.status === 'already_processed') {
+            location.reload();
+        } else {
+            showToast('error', data.message);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-gear"></i> Process';
+        }
+    })
+    .catch(err => {
+        showToast('error', err);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-gear"></i> Process';
+    });
+}
+
+let deleteDocId = null;
+
+function confirmDelete(docId, docTitle) {
+    deleteDocId = docId;
+    document.getElementById('deleteDocName').textContent = docTitle;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+    const btn = document.getElementById('confirmDeleteBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Deleting...';
+
+    try {
+        const response = await fetch(`/delete/${deleteDocId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            }
+        });
+
+        const data = await response.json();
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+
+        if (data.status === 'success') {
+            const row = document.getElementById(`doc-${deleteDocId}`);
+            if (row) row.remove();
+            showToast('success', data.message);
+        } else {
+            showToast('error', data.message);
+        }
+    } catch (err) {
+        showToast('error', err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-trash"></i> Delete Permanently';
+    }
+});
+</script>
+{% endblock %}

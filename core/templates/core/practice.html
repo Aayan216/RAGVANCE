@@ -1,0 +1,581 @@
+{% extends "core/base.html" %}
+{% block title %}Practice - RAGVANCE{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-9 mx-auto">
+
+        <!-- Header Banner -->
+        <div class="rounded-4 p-4 mb-4" style="background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-700)); color: var(--color-text-light);">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-question-circle" style="font-size: 1.5rem;"></i>
+                </div>
+                <div>
+                    <h3 class="mb-0 fw-bold">Practice Mode</h3>
+                    <p class="mb-0 opacity-75" style="font-size: 0.9rem;">Generate multiple choice questions from your study materials.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Panel -->
+        <div id="settingsPanel">
+
+            <!-- Document Selection -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-start justify-content-between mb-3">
+                        <div>
+                            <h5 class="mb-1"><i class="bi bi-folder2-open me-2" style="color: var(--color-primary-500);"></i>Select Study Materials</h5>
+                            <p class="text-muted mb-0" style="font-size: 0.85rem;">Choose one or more uploaded files to generate MCQs from.</p>
+                        </div>
+                        <div class="position-relative">
+                            <input type="text" id="docSearch" class="form-control form-control-sm" placeholder="Search files..." style="width: 200px; padding-left: 2rem;">
+                            <i class="bi bi-search position-absolute" style="left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--color-neutral-400); font-size: 0.85rem;"></i>
+                        </div>
+                    </div>
+
+                    {% if documents %}
+                        <div class="doc-list" id="docList">
+                            {% for doc in documents %}
+                                <label class="d-flex align-items-center gap-3 p-2 rounded-2 mb-1 doc-row" style="cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='var(--color-neutral-100)'" onmouseout="this.style.background='transparent'">
+                                    <input type="checkbox" class="form-check-input doc-checkbox" value="{{ doc.id }}" data-title="{{ doc.title|lower }}" onchange="updateConfigSummary()">
+                                    <div class="d-flex align-items-center gap-2 flex-grow-1">
+                                        {% if doc.file_type == 'pdf' %}
+                                            <span class="badge" style="background: #dc3545; color: white; font-size: 0.65rem; padding: 0.25em 0.5em;">PDF</span>
+                                        {% elif doc.file_type == 'docx' %}
+                                            <span class="badge" style="background: #0d6efd; color: white; font-size: 0.65rem; padding: 0.25em 0.5em;">DOC</span>
+                                        {% elif doc.file_type == 'pptx' %}
+                                            <span class="badge" style="background: #fd7e14; color: white; font-size: 0.65rem; padding: 0.25em 0.5em;">PPT</span>
+                                        {% else %}
+                                            <span class="badge" style="background: #6c757d; color: white; font-size: 0.65rem; padding: 0.25em 0.5em;">TXT</span>
+                                        {% endif %}
+                                        <span class="doc-title">{{ doc.title }}</span>
+                                    </div>
+                                    <small class="text-muted" style="font-size: 0.78rem;">{{ doc.uploaded_at|date:"M d, Y" }}</small>
+                                </label>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                            <p class="mt-2 mb-0">No processed documents found. Upload and process documents first.</p>
+                        </div>
+                    {% endif %}
+
+                    <div id="docHint" class="mt-3 p-2 rounded-2" style="background: rgba(3,83,82,0.06); font-size: 0.82rem; color: var(--color-primary-600);">
+                        <i class="bi bi-lightbulb me-1"></i> Select at least one study material to generate MCQs.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Row -->
+            <div class="row g-3 mb-4">
+                <!-- Number of Questions -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(3,83,82,0.1); display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-list-ol" style="color: var(--color-primary-500); font-size: 0.9rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0" style="font-size: 0.85rem;">Number of Questions</h6>
+                                    <small class="text-muted" style="font-size: 0.72rem;">Choose how many MCQs to generate.</small>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-1 flex-wrap mt-2" id="numBtnGroup">
+                                <button type="button" class="btn btn-sm num-btn active" data-val="5" onclick="selectNum(this)">5</button>
+                                <button type="button" class="btn btn-sm num-btn" data-val="10" onclick="selectNum(this)">10</button>
+                                <button type="button" class="btn btn-sm num-btn" data-val="20" onclick="selectNum(this)">20</button>
+                                <button type="button" class="btn btn-sm num-btn" data-val="30" onclick="selectNum(this)">30</button>
+                                <button type="button" class="btn btn-sm num-btn" data-val="50" onclick="selectNum(this)">50</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Topic -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(3,83,82,0.1); display: flex; align-items: center; justify-content: center;">
+                                    <i class="bi bi-tag" style="color: var(--color-primary-500); font-size: 0.9rem;"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0" style="font-size: 0.85rem;">Topic (Optional)</h6>
+                                    <small class="text-muted" style="font-size: 0.72rem;">Focus on a specific topic or leave it general.</small>
+                                </div>
+                            </div>
+                            <input type="text" id="topicInput" class="form-control form-control-sm mt-2" placeholder="e.g., Machine Learning, DBMS, Python" oninput="updateConfigSummary()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuration Summary -->
+            <div class="card mb-4" style="background: var(--color-neutral-50); border: 1px solid var(--color-neutral-200);">
+                <div class="card-body py-3">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div style="width: 28px; height: 28px; border-radius: 6px; background: rgba(3,83,82,0.1); display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-gear" style="color: var(--color-primary-500); font-size: 0.8rem;"></i>
+                        </div>
+                        <h6 class="mb-0" style="font-size: 0.85rem;">Practice Configuration</h6>
+                    </div>
+                    <div class="row text-center mt-2" style="font-size: 0.82rem;">
+                        <div class="col">
+                            <small class="text-muted d-block">Selected Materials</small>
+                            <strong id="summaryDocs" style="color: var(--color-primary-600);">0 selected</strong>
+                        </div>
+                        <div class="col">
+                            <small class="text-muted d-block">Questions</small>
+                            <strong id="summaryNum" style="color: var(--color-primary-600);">5</strong>
+                        </div>
+                        <div class="col">
+                            <small class="text-muted d-block">Topic</small>
+                            <strong id="summaryTopic" style="color: var(--color-primary-600);">All Topics</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generate Button -->
+            <button id="generateBtn" class="btn btn-lg w-100 mb-4" style="background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600)); color: var(--color-text-light); border: none; padding: 0.85rem; font-weight: 600;" onclick="generateMCQs()">
+                <span id="generateBtnText"><i class="bi bi-stars me-2"></i>Generate MCQs</span>
+                <span id="generateBtnLoading" class="d-none"><span class="spinner-border spinner-border-sm me-2"></span>Generating...</span>
+                <i class="bi bi-arrow-right float-end mt-1"></i>
+            </button>
+        </div>
+
+        <!-- Loading Panel -->
+        <div id="loadingPanel" class="text-center py-5 d-none">
+            <div class="spinner-border" style="color: var(--color-primary-500); width: 3rem; height: 3rem;"></div>
+            <p class="mt-3 text-muted">Generating your questions...</p>
+        </div>
+
+        <!-- MCQ Panel -->
+        <div id="mcqPanel" class="d-none">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, var(--color-primary-500), var(--color-primary-600)); color: var(--color-text-light);">
+                    <h5 class="mb-0" id="currentQuestionText"></h5>
+                    <span id="progressBadge" class="badge" style="background: rgba(255,255,255,0.2);"></span>
+                </div>
+                <div class="card-body">
+                    <span id="mcqCounter" class="badge mb-3" style="background: var(--color-primary-100); color: var(--color-primary-700);"></span>
+
+                    <form id="mcqForm">
+                        <div id="optionsContainer"></div>
+                        <div class="mt-4 d-flex gap-2">
+                            <button type="button" id="checkBtn" class="btn" style="background: var(--color-primary-500); color: var(--color-text-light);" onclick="checkAnswer()" disabled>
+                                <i class="bi bi-check-circle me-1"></i> Check Answer
+                            </button>
+                            <button type="button" id="nextBtn" class="btn btn-outline-secondary" style="display:none;" onclick="nextQuestion()">
+                                <i class="bi bi-arrow-right me-1"></i> Next
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="feedbackPanel" class="mt-4 d-none">
+                        <div class="alert" role="alert"></div>
+                        <div class="explanation mt-2 p-3 rounded-3" style="background: var(--color-neutral-50); font-size: 0.9rem;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Complete Panel -->
+        <div id="completePanel" class="text-center py-5 d-none">
+            <div class="card">
+                <div class="card-body py-5">
+                    <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(76,175,80,0.1); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                        <i class="bi bi-check-circle-fill" style="font-size: 2rem; color: var(--color-success);"></i>
+                    </div>
+                    <h4>Practice Complete!</h4>
+                    <p class="text-muted">You've answered all questions.</p>
+                    <button id="restartBtn" class="btn" style="background: var(--color-primary-500); color: var(--color-text-light);" onclick="restart()">
+                        <i class="bi bi-arrow-repeat me-1"></i> Practice Again
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
+    <div id="successToast" class="toast align-items-center border-0" role="alert" style="background: var(--color-success); color: var(--color-text-light);">
+        <div class="d-flex">
+            <div class="toast-body"><i class="bi bi-check-circle-fill me-2"></i><span id="successToastMsg"></span></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
+    <div id="errorToast" class="toast align-items-center border-0" role="alert" style="background: var(--color-danger); color: var(--color-text-light);">
+        <div class="d-flex">
+            <div class="toast-body"><i class="bi bi-exclamation-circle-fill me-2"></i><span id="errorToastMsg"></span></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<style>
+    .num-btn {
+        border: 1px solid var(--color-neutral-200);
+        background: var(--color-surface-raised);
+        color: var(--color-neutral-700);
+        font-size: 0.82rem;
+        padding: 0.35rem 0.9rem;
+        border-radius: 8px;
+        transition: all 0.15s;
+    }
+    .num-btn:hover {
+        border-color: var(--color-primary-400);
+        color: var(--color-primary-600);
+    }
+    .num-btn.active {
+        background: var(--color-primary-500);
+        border-color: var(--color-primary-500);
+        color: white;
+    }
+    .form-check-input:checked {
+        background-color: var(--color-primary-500);
+        border-color: var(--color-primary-500);
+    }
+</style>
+<script>
+let mcqs = [];
+let currentIndex = 0;
+let answered = false;
+let currentSelected = null;
+let currentFeedback = null;
+
+const PRACTICE_STATE_KEY = 'ragvance-practice-state';
+const PRACTICE_STATE_VERSION = 1;
+
+function savePracticeState() {
+    try {
+        const state = {
+            version: PRACTICE_STATE_VERSION,
+            docIds: getSelectedDocIds(),
+            num: getSelectedNum(),
+            topic: document.getElementById('topicInput').value.trim(),
+            mcqs: mcqs,
+            currentIndex: currentIndex,
+            answered: answered,
+            selected: currentSelected,
+            feedback: currentFeedback,
+        };
+        localStorage.setItem(PRACTICE_STATE_KEY, JSON.stringify(state));
+    } catch (err) {}
+}
+
+function loadPracticeState() {
+    try {
+        const raw = localStorage.getItem(PRACTICE_STATE_KEY);
+        if (!raw) return null;
+        const state = JSON.parse(raw);
+        if (!state || state.version !== PRACTICE_STATE_VERSION) return null;
+        if (!Array.isArray(state.docIds) || !Array.isArray(state.mcqs)) return null;
+        const validMcqs = state.mcqs.every(q => q && typeof q.question === 'string' && q.options && typeof q.options === 'object');
+        if (!validMcqs) return null;
+        return state;
+    } catch (err) {
+        return null;
+    }
+}
+
+function clearPracticeState() {
+    try {
+        localStorage.removeItem(PRACTICE_STATE_KEY);
+    } catch (err) {}
+}
+
+function showToast(type, message) {
+    const id = type === 'success' ? 'successToast' : 'errorToast';
+    const msgId = type === 'success' ? 'successToastMsg' : 'errorToastMsg';
+    document.getElementById(msgId).textContent = message;
+    new bootstrap.Toast(document.getElementById(id), { delay: 4000 }).show();
+}
+
+function selectNum(btn) {
+    document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    updateConfigSummary();
+}
+
+function getSelectedDocIds() {
+    return [...document.querySelectorAll('.doc-checkbox:checked')].map(cb => parseInt(cb.value));
+}
+
+function getSelectedNum() {
+    const active = document.querySelector('.num-btn.active');
+    return active ? parseInt(active.dataset.val) : 5;
+}
+
+function updateConfigSummary() {
+    const ids = getSelectedDocIds();
+    document.getElementById('summaryDocs').textContent = ids.length + ' selected';
+    document.getElementById('summaryNum').textContent = getSelectedNum();
+    const topic = document.getElementById('topicInput').value.trim();
+    document.getElementById('summaryTopic').textContent = topic || 'All Topics';
+    savePracticeState();
+}
+
+document.getElementById('docSearch').addEventListener('input', function() {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('.doc-row').forEach(row => {
+        const title = row.querySelector('.doc-checkbox').dataset.title;
+        row.style.display = title.includes(q) ? '' : 'none';
+    });
+});
+
+document.getElementById('optionsContainer').addEventListener('change', (e) => {
+    if (e.target.type === 'radio' && e.target.name === 'option') {
+        currentSelected = e.target.value;
+        savePracticeState();
+    }
+});
+
+async function generateMCQs() {
+    const docIds = getSelectedDocIds();
+    if (docIds.length === 0) {
+        showToast('error', 'Please select at least one study material.');
+        return;
+    }
+
+    const num = getSelectedNum();
+    const topic = document.getElementById('topicInput').value.trim() || null;
+
+    document.getElementById('settingsPanel').classList.add('d-none');
+    document.getElementById('loadingPanel').classList.remove('d-none');
+
+    try {
+        const response = await fetch('{% url "practice_generate" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: JSON.stringify({ num_questions: num, difficulty: 'medium', topic, doc_ids: docIds })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            showToast('error', data.error || 'Failed to generate questions.');
+            restart();
+            return;
+        }
+
+        mcqs = data.mcqs || [];
+
+        if (mcqs.length === 0) {
+            showToast('error', 'No questions generated. Try selecting different documents.');
+            restart();
+            return;
+        }
+
+        currentIndex = 0;
+        showQuestion();
+    } catch (err) {
+        showToast('error', err.message);
+        restart();
+    } finally {
+        document.getElementById('loadingPanel').classList.add('d-none');
+    }
+}
+
+function showQuestion() {
+    const mcq = mcqs[currentIndex];
+    document.getElementById('mcqCounter').textContent = `Question ${currentIndex + 1} of ${mcqs.length}`;
+    document.getElementById('currentQuestionText').textContent = mcq.question;
+    document.getElementById('progressBadge').textContent = `${currentIndex + 1}/${mcqs.length}`;
+
+    const container = document.getElementById('optionsContainer');
+    container.innerHTML = '';
+
+    Object.entries(mcq.options).forEach(([key, value]) => {
+        const div = document.createElement('div');
+        div.className = 'form-check mb-2 p-3 rounded-3';
+        div.style.cssText = 'background: var(--color-neutral-50); border: 1px solid var(--color-neutral-200); transition: all 0.15s;';
+        div.innerHTML = `
+            <input class="form-check-input" type="radio" name="option" id="opt-${key}" value="${key}" style="margin-top: 0.15rem;">
+            <label class="form-check-label w-100 ms-2" for="opt-${key}" style="cursor: pointer;">
+                <strong>${key}.</strong> ${value}
+            </label>
+        `;
+        container.appendChild(div);
+    });
+
+    document.getElementById('checkBtn').disabled = false;
+    document.getElementById('checkBtn').style.display = 'inline-block';
+    document.getElementById('nextBtn').style.display = 'none';
+    document.getElementById('feedbackPanel').classList.add('d-none');
+    document.getElementById('mcqForm').classList.remove('d-none');
+    document.getElementById('mcqPanel').classList.remove('d-none');
+    answered = false;
+    currentSelected = null;
+    currentFeedback = null;
+    savePracticeState();
+}
+
+async function checkAnswer() {
+    const selected = document.querySelector('input[name="option"]:checked');
+    if (!selected) {
+        showToast('error', 'Please select an answer.');
+        return;
+    }
+
+    const mcq = mcqs[currentIndex];
+
+    try {
+        const response = await fetch('{% url "practice_submit" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: JSON.stringify({ mcq, selected: selected.value })
+        });
+
+        const data = await response.json();
+        showFeedback(data, selected.value);
+    } catch (err) {
+        showToast('error', err.message);
+    }
+}
+
+function showFeedback(data, selected) {
+    answered = true;
+    currentSelected = selected;
+    currentFeedback = { selected: selected, data: data };
+    document.getElementById('checkBtn').style.display = 'none';
+    document.getElementById('nextBtn').style.display = 'inline-block';
+
+    const feedback = document.getElementById('feedbackPanel');
+    const alertDiv = feedback.querySelector('.alert');
+    const expDiv = feedback.querySelector('.explanation');
+
+    if (data.is_correct) {
+        alertDiv.className = 'alert alert-success';
+        alertDiv.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> <strong>Correct!</strong>';
+    } else {
+        alertDiv.className = 'alert alert-danger';
+        alertDiv.innerHTML = `<i class="bi bi-x-circle-fill me-1"></i> <strong>Incorrect.</strong> Correct answer: ${data.correct_answer}`;
+    }
+
+    expDiv.innerHTML = `<strong>Explanation:</strong> ${data.explanation}<br><small class="text-muted">Topic: ${data.topic}</small>`;
+    feedback.classList.remove('d-none');
+
+    document.querySelectorAll('input[name="option"]').forEach(input => {
+        const label = input.nextElementSibling;
+        if (input.value === data.correct_answer) {
+            label.classList.add('text-success', 'fw-bold');
+        } else if (input.value === selected && !data.is_correct) {
+            label.classList.add('text-danger');
+        }
+        input.disabled = true;
+    });
+    savePracticeState();
+}
+
+function nextQuestion() {
+    currentIndex++;
+    if (currentIndex >= mcqs.length) {
+        completePractice();
+    } else {
+        showQuestion();
+    }
+}
+
+function completePractice() {
+    document.getElementById('mcqPanel').classList.add('d-none');
+    document.getElementById('completePanel').classList.remove('d-none');
+    savePracticeState();
+}
+
+function restart() {
+    mcqs = [];
+    currentIndex = 0;
+    answered = false;
+    currentSelected = null;
+    currentFeedback = null;
+    document.getElementById('settingsPanel').classList.remove('d-none');
+    document.getElementById('mcqPanel').classList.add('d-none');
+    document.getElementById('completePanel').classList.add('d-none');
+    document.getElementById('loadingPanel').classList.add('d-none');
+    updateConfigSummary();
+}
+
+function restorePracticeState() {
+    let saved = null;
+    try {
+        saved = loadPracticeState();
+        if (!saved) return;
+
+        document.querySelectorAll('.doc-checkbox').forEach(cb => {
+            cb.checked = saved.docIds.includes(parseInt(cb.value));
+        });
+
+        const numBtns = document.querySelectorAll('.num-btn');
+        numBtns.forEach(b => b.classList.remove('active'));
+        let matchedNum = false;
+        numBtns.forEach(b => {
+            if (parseInt(b.dataset.val) === saved.num) {
+                b.classList.add('active');
+                matchedNum = true;
+            }
+        });
+        if (!matchedNum && numBtns.length > 0) numBtns[0].classList.add('active');
+
+        if (typeof saved.topic === 'string') {
+            document.getElementById('topicInput').value = saved.topic;
+        }
+
+        if (saved.mcqs.length === 0) return;
+
+        mcqs = saved.mcqs;
+        currentIndex = typeof saved.currentIndex === 'number' ? Math.min(Math.max(saved.currentIndex, 0), mcqs.length) : 0;
+
+        document.getElementById('settingsPanel').classList.add('d-none');
+        document.getElementById('mcqPanel').classList.remove('d-none');
+
+        if (currentIndex >= mcqs.length) {
+            completePractice();
+            return;
+        }
+
+        showQuestion();
+
+        if (saved.selected) {
+            const radio = document.querySelector(`input[name="option"][value="${saved.selected}"]`);
+            if (radio) {
+                radio.checked = true;
+                currentSelected = saved.selected;
+            }
+        }
+
+        if (saved.answered && saved.feedback && saved.feedback.data) {
+            showFeedback(saved.feedback.data, saved.feedback.selected || saved.selected);
+        }
+    } catch (err) {
+        clearPracticeState();
+        mcqs = [];
+        currentIndex = 0;
+        answered = false;
+        currentSelected = null;
+        currentFeedback = null;
+        document.getElementById('settingsPanel').classList.remove('d-none');
+        document.getElementById('mcqPanel').classList.add('d-none');
+        document.getElementById('completePanel').classList.add('d-none');
+    }
+}
+
+restorePracticeState();
+updateConfigSummary();
+</script>
+{% endblock %}

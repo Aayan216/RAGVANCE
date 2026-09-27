@@ -1,0 +1,101 @@
+/* ========================================
+   RAGVANCE Color Palette
+   Generated from: #035352 (teal) + #f3e8bc (cream)
+   ======================================== */
+
+:root {
+
+    /* ---- PRIMARY (Teal #035352) ---- */
+    --color-primary-50:  #e6f2f2;
+    --color-primary-100: #b3dede;
+    --color-primary-200: #80c9c9;
+    --color-primary-300: #4db5b5;
+    --color-primary-400: #26a4a2;
+    --color-primary-500: #035352;
+    --color-primary-600: #024444;
+    --color-primary-700: #013535;
+    --color-primary-800: #012626;
+    --color-primary-900: #001818;
+    --color-primary-950: #000c0c;
+
+    /* ---- SECONDARY (Cream #f3e8bc) ---- */
+    --color-secondary-50:  #fefdf8;
+    --color-secondary-100: #fcf9ed;
+    --color-secondary-200: #f9f0d4;
+    --color-secondary-300: #f3e8bc;
+    --color-secondary-400: #e8d58a;
+    --color-secondary-500: #dcc258;
+    --color-secondary-600: #c4a02e;
+    --color-secondary-700: #967823;
+    --color-secondary-800: #685318;
+    --color-secondary-900: #3a2e0d;
+    --color-secondary-950: #1c1707;
+
+    /* ---- ACCENT (Coral-Orange) ---- */
+    --color-accent:       #E8724A;
+    --color-accent-hover: #d4603a;
+
+    /* ---- SEMANTIC ---- */
+    --color-success: #4CAF50;
+    --color-warning: #F59E0B;
+    --color-danger:  #DC3545;
+    --color-info:    #035352;
+
+    /* ---- NEUTRALS ---- */
+    --color-neutral-50:  #F9FAFB;
+    --color-neutral-100: #F3F4F6;
+    --color-neutral-200: #E5E7EB;
+    --color-neutral-300: #D1D5DB;
+    --color-neutral-400: #9CA3AF;
+    --color-neutral-500: #6B7280;
+    --color-neutral-600: #4B5563;
+    --color-neutral-700: #374151;
+    --color-neutral-800: #1F2937;
+    --color-neutral-900: #111827;
+
+    /* ---- TEXT COLORS ---- */
+    --color-text-light:    #ffffff;
+    --color-text-on-accent: #ffffff;
+    --color-text-dark:     #1F2937;
+    --color-text-muted:    #6B7280;
+
+    /* ---- RAISED SURFACES (buttons, inner panels) ---- */
+    --color-surface-raised: #ffffff;
+}
+
+/* ========================================
+   Dark Theme — Charcoal RAGVANCE
+   Applied when data-theme="dark" on <html>
+   ======================================== */
+html[data-theme="dark"] {
+
+    /* ---- SURFACES (hierarchy) ---- */
+    --color-neutral-50:  #222222;  /* main background */
+    --color-neutral-100: #2A2A2A;  /* cards / panels */
+    --color-neutral-200: #3A3A3A;  /* borders */
+    --color-neutral-300: #454545;  /* stronger borders / dividers */
+    --color-neutral-400: #6B6B6B;
+
+    /* ---- TEXT TONES (flipped scale) ---- */
+    --color-neutral-500: #B5B5B5;  /* secondary text */
+    --color-neutral-600: #C9C9C9;
+    --color-neutral-700: #DCDCDC;
+    --color-neutral-800: #F5F5F5;  /* primary text */
+    --color-neutral-900: #FFFFFF;
+
+    --color-text-dark:  #F5F5F5;
+    --color-text-muted: #B5B5B5;
+
+    --color-surface-raised: #2A2A2A;
+
+    /* ---- BOOTSTRAP THEME VARS ---- */
+    --bs-body-bg: #222222;
+    --bs-body-color: #F5F5F5;
+    --bs-border-color: #3A3A3A;
+    --bs-card-bg: #2A2A2A;
+    --bs-tertiary-bg: #2A2A2A;
+    --bs-secondary-bg: #303030;
+    --bs-emphasis-color: #F5F5F5;
+    --bs-secondary-color: #B5B5B5;
+    --bs-tertiary-color: #B5B5B5;
+}
