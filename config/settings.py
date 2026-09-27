@@ -70,7 +70,7 @@ STATICFILES_DIRS = [BASE_DIR / "core" / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "media/"
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = BASE_DIR / "data" / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -80,7 +80,7 @@ CHUNK_OVERLAP = 50
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
 GEMINI_MODEL = "gemini-3.5-flash-lite"
 TOP_K_RETRIEVAL = 5
-VECTOR_STORE_PATH = BASE_DIR / "vector_store"
+VECTOR_STORE_PATH = BASE_DIR / "data" / "vector_store"
 MOCK_TEST_BATCH_SIZE = 3
 MOCK_TEST_QUESTIONS_PER_LLM_CALL = 5
 PRACTICE_BATCH_SIZE = 3
