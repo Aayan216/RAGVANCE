@@ -13,7 +13,7 @@ from django.utils import timezone
 
 from core import views
 from core.models import MockTest, TestAttempt, TestQuestion, UserAnswer
-from core.services.mock_test import MockTestService
+from mock_test import MockTestService
 
 PASSED = 0
 FAILED = 0

@@ -5,8 +5,8 @@ from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 from core.models import MockTest, TestQuestion, TestAttempt, UserAnswer
-from .rag_chain import RAGChain
-from .batch_generation import run_generation, validate_mcq
+from rag.rag_chain import RAGChain
+from rag.batch_generation import run_generation, validate_mcq
 
 
 class MockTestService:

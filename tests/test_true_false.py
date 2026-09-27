@@ -14,13 +14,13 @@ from django.utils import timezone
 
 from core import views
 from core.models import MockTest, TestQuestion, TestAttempt, UserAnswer, Document
-from core.services.batch_generation import (
+from rag.batch_generation import (
     validate_mcq,
     validate_true_false,
     validate_question,
     run_generation,
 )
-from core.services.mock_test import MockTestService
+from mock_test import MockTestService
 
 PASSED = 0
 FAILED = 0

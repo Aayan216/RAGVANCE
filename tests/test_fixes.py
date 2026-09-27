@@ -15,7 +15,7 @@ from django.db import transaction
 from django.test import Client, RequestFactory
 
 from core.models import MockTest
-from core.services.rag_chain import _redact_secrets
+from rag.rag_chain import _redact_secrets
 from core.views import (
     mock_test_settings_view,
     practice_generate_view,

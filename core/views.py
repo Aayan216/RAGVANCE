@@ -10,13 +10,15 @@ from django.utils import timezone
 
 from core.models import Document, Chunk, MockTest, TestAttempt, UserAnswer
 from core.forms import DocumentUploadForm, TutorQuestionForm
-from core.services import (
+from rag import (
     FileParser,
     TextChunker,
     Embedder,
     VectorStore,
     RAGChain,
     MCQGenerator,
+)
+from mock_test import (
     MockTestService,
     PerformanceAnalyzer,
 )

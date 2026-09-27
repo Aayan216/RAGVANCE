@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from core.models import MockTest, TestQuestion, TestAttempt, UserAnswer
 from core.views import mock_test_service
-from core.services.batch_generation import validate_true_false, validate_mcq
+from rag.batch_generation import validate_true_false, validate_mcq
 
 PASSED = 0
 FAILED = 0
