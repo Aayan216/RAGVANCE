@@ -12,8 +12,8 @@ django.setup()
 from django.test import Client
 from django.utils import timezone
 
-from core import views
-from core.models import MockTest, TestQuestion, TestAttempt, UserAnswer, Document
+from backend import views
+from backend.models import MockTest, TestQuestion, TestAttempt, UserAnswer, Document
 from rag.batch_generation import (
     validate_mcq,
     validate_true_false,

@@ -11,8 +11,8 @@ django.setup()
 from django.test import Client
 from django.utils import timezone
 
-from core import views
-from core.models import MockTest, TestAttempt, TestQuestion, UserAnswer
+from backend import views
+from backend.models import MockTest, TestAttempt, TestQuestion, UserAnswer
 from mock_test import MockTestService
 
 PASSED = 0

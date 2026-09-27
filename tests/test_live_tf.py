@@ -9,8 +9,8 @@ django.setup()
 
 from django.utils import timezone
 
-from core.models import MockTest, TestQuestion, TestAttempt, UserAnswer
-from core.views import mock_test_service
+from backend.models import MockTest, TestQuestion, TestAttempt, UserAnswer
+from backend.views import mock_test_service
 from rag.batch_generation import validate_true_false, validate_mcq
 
 PASSED = 0

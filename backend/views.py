@@ -8,8 +8,8 @@ from django.contrib import messages
 from django.conf import settings
 from django.utils import timezone
 
-from core.models import Document, Chunk, MockTest, TestAttempt, UserAnswer
-from core.forms import DocumentUploadForm, TutorQuestionForm
+from backend.models import Document, Chunk, MockTest, TestAttempt, UserAnswer
+from backend.forms import DocumentUploadForm, TutorQuestionForm
 from rag import (
     FileParser,
     TextChunker,

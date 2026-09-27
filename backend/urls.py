@@ -1,5 +1,5 @@
 from django.urls import path
-from core import views
+from backend import views
 
 urlpatterns = [
     path("", views.upload_view, name="upload"),

@@ -4,7 +4,7 @@ from typing import List, Dict, Any
 from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
-from core.models import MockTest, TestQuestion, TestAttempt, UserAnswer
+from backend.models import MockTest, TestQuestion, TestAttempt, UserAnswer
 from rag.rag_chain import RAGChain
 from rag.batch_generation import run_generation, validate_mcq
 

@@ -10,8 +10,8 @@ django.setup()
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client
 
-from core import views
-from core.models import Chunk, Document
+from backend import views
+from backend.models import Chunk, Document
 
 PASSED = 0
 FAILED = 0

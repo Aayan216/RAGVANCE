@@ -1,5 +1,5 @@
 from django import forms
-from core.models import Document
+from backend.models import Document
 
 
 class DocumentUploadForm(forms.ModelForm):

@@ -1,7 +1,7 @@
 from typing import List, Dict, Any
 from collections import defaultdict
 import pandas as pd
-from core.models import TestAttempt, UserAnswer, TestQuestion, PerformanceAnalysis
+from backend.models import TestAttempt, UserAnswer, TestQuestion, PerformanceAnalysis
 
 
 class PerformanceAnalyzer:
