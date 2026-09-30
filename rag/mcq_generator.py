@@ -2,6 +2,7 @@ from typing import List, Dict, Any, Optional
 from django.conf import settings
 from .rag_chain import RAGChain
 from .batch_generation import run_generation
+from .grounding import make_grounding_validator
 
 
 class MCQGenerator:
@@ -20,8 +21,8 @@ class MCQGenerator:
         concurrency = getattr(settings, "PRACTICE_BATCH_SIZE", 3)
 
         def request_one_call(call_index: int, count: int) -> List[Dict[str, Any]]:
-            # Vary the retrieval query slightly for diversity across calls
-            query_topic = topic or f"topic {call_index + 1}"
+            # Corpus-derived seed per batch, rotating across requests (None -> "key concepts").
+            query_topic = topic or self.rag_chain.next_practice_query(doc_ids)
             return self.rag_chain.generate_mcq_batch(
                 topic=query_topic,
                 difficulty=difficulty,
@@ -35,6 +36,7 @@ class MCQGenerator:
             per_call=per_call,
             concurrency=concurrency,
             log_label="Practice",
+            extra_validate=make_grounding_validator(self.rag_chain.vector_store),
         )
         return valid
 

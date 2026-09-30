@@ -7,6 +7,7 @@ from django.utils import timezone
 from backend.models import MockTest, TestQuestion, TestAttempt, UserAnswer
 from rag.rag_chain import RAGChain
 from rag.batch_generation import run_generation, validate_mcq
+from rag.sanitize import scrub_citation_markers
 
 
 class MockTestService:
@@ -229,18 +230,18 @@ class MockTestService:
             data = {
                 "question_id": q.id,
                 "question_type": q.question_type,
-                "question_text": q.question_text,
+                "question_text": scrub_citation_markers(q.question_text),
                 "options": {
-                    "A": q.option_a,
-                    "B": q.option_b,
-                    "C": q.option_c,
-                    "D": q.option_d,
+                    "A": scrub_citation_markers(q.option_a),
+                    "B": scrub_citation_markers(q.option_b),
+                    "C": scrub_citation_markers(q.option_c),
+                    "D": scrub_citation_markers(q.option_d),
                 },
                 "correct_answer": q.correct_answer,
                 "selected": ans.selected_option,
                 "is_correct": ans.is_correct,
-                "explanation": q.explanation,
-                "topic": q.topic,
+                "explanation": scrub_citation_markers(q.explanation),
+                "topic": scrub_citation_markers(q.topic),
                 "source_chunk_ids": q.source_chunk_ids,
             }
             if ans.is_correct:

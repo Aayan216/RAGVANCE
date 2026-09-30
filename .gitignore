@@ -3,3 +3,13 @@ __pycache__/
 *.pyc
 .env
 staticfiles/
+logs/
+
+# Generated application data
+db.sqlite3
+data/media/
+data/vector_store/
+
+# Audit: ship report markdown only, keep scripts/corpus/logs local
+audit/*
+!audit/*.md

@@ -18,6 +18,8 @@ from rag import (
     RAGChain,
     MCQGenerator,
 )
+from rag.cleaning import clean_pages, near_duplicate_mask
+from rag.llm_resilience import is_transient_llm_error
 from mock_test import (
     MockTestService,
     PerformanceAnalyzer,
@@ -64,20 +66,31 @@ def process_document_view(request, doc_id):
         # Parse
         file_path = doc.file.path
         pages = FileParser.parse(file_path, doc.file_type)
-        
+
+        # Clean (whitespace/dehyphenation + repeated header/footer removal)
+        pages = clean_pages(pages)
+
         # Chunk
         chunker = TextChunker(
             chunk_size=getattr(settings, "CHUNK_SIZE", 500),
             chunk_overlap=getattr(settings, "CHUNK_OVERLAP", 50),
         )
         chunks = chunker.chunk_pages(pages)
-        
+
         if not chunks:
             return JsonResponse({"status": "error", "message": "No text extracted from document"})
-        
+
         # Embed
         texts = [c["content"] for c in chunks]
         embeddings = embedder.embed(texts)
+
+        # Drop near-duplicate chunks (same document only) before indexing
+        keep = near_duplicate_mask(embeddings, texts)
+        if not all(keep):
+            chunks = [c for c, k in zip(chunks, keep) if k]
+            embeddings = embeddings[[i for i, k in enumerate(keep) if k]]
+        if not chunks:
+            return JsonResponse({"status": "error", "message": "No text extracted from document"})
         
         # Prepare metadata
         metadata = []
@@ -163,9 +176,50 @@ def tutor_ask_view(request):
         
         result = rag_chain.tutor_query(question)
         return JsonResponse(result)
-    
+
     except Exception as e:
+        if is_transient_llm_error(e):
+            return JsonResponse(
+                {"error": "The AI service is temporarily unavailable. Please try again."},
+                status=503,
+            )
         return JsonResponse({"error": str(e)}, status=500)
+
+
+@require_http_methods(["GET"])
+def sources_view(request):
+    """Direct lookup of source chunks by FAISS ids. No LLM involved."""
+    raw = request.GET.get("ids", "")
+    parts = [p.strip() for p in raw.split(",") if p.strip()]
+    if not parts:
+        return JsonResponse({"error": "ids parameter is required"}, status=400)
+    if len(parts) > 50:
+        return JsonResponse({"error": "too many ids (max 50)"}, status=400)
+
+    ids = []
+    for part in parts:
+        try:
+            value = int(part)
+        except ValueError:
+            return JsonResponse({"error": f"invalid id: {part}"}, status=400)
+        if value < 0:
+            return JsonResponse({"error": f"invalid id: {part}"}, status=400)
+        ids.append(value)
+
+    sources = []
+    for fid in ids:
+        meta = vector_store.get_by_id(fid)
+        if not meta:
+            continue
+        sources.append({
+            "faiss_id": meta.get("faiss_id", fid),
+            "doc_id": meta.get("doc_id"),
+            "chunk_index": meta.get("chunk_index"),
+            "page_number": meta.get("page_number"),
+            "file_name": meta.get("file_name"),
+            "text": meta.get("text", meta.get("content", "")),
+        })
+    return JsonResponse({"sources": sources})
 
 
 def practice_view(request):

@@ -179,6 +179,9 @@
                     <div id="feedbackPanel" class="mt-4 d-none">
                         <div class="alert" role="alert"></div>
                         <div class="explanation mt-2 p-3 rounded-3" style="background: var(--color-neutral-50); font-size: 0.9rem;"></div>
+                        <button type="button" id="practiceSourcesBtn" class="btn btn-sm btn-outline-secondary mt-2 d-none" onclick="showPracticeSources()">
+                            <i class="bi bi-eye"></i> View Sources
+                        </button>
                     </div>
                 </div>
             </div>
@@ -198,6 +201,19 @@
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Source Modal -->
+<div class="modal fade" id="practiceSourceModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Source Context</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="practiceSourceContent"></div>
         </div>
     </div>
 </div>
@@ -469,6 +485,16 @@ function showFeedback(data, selected) {
     }
 
     expDiv.innerHTML = `<strong>Explanation:</strong> ${data.explanation}<br><small class="text-muted">Topic: ${data.topic}</small>`;
+
+    const srcBtn = document.getElementById('practiceSourcesBtn');
+    const currentQ = mcqs[currentIndex];
+    const srcIds = (currentQ && Array.isArray(currentQ.source_chunks)) ? currentQ.source_chunks : [];
+    if (srcIds.length > 0) {
+        srcBtn.innerHTML = `<i class="bi bi-eye"></i> View Sources (${srcIds.length})`;
+        srcBtn.classList.remove('d-none');
+    } else {
+        srcBtn.classList.add('d-none');
+    }
     feedback.classList.remove('d-none');
 
     document.querySelectorAll('input[name="option"]').forEach(input => {
@@ -489,6 +515,48 @@ function nextQuestion() {
         completePractice();
     } else {
         showQuestion();
+    }
+}
+
+function pageSuffix(src, sep) {
+    const isTxt = String(src.file_name || '').toLowerCase().endsWith('.txt');
+    return (!isTxt && src.page_number) ? `${sep}${src.page_number}` : '';
+}
+
+async function showPracticeSources() {
+    const currentQ = mcqs[currentIndex];
+    const ids = (currentQ && Array.isArray(currentQ.source_chunks)) ? currentQ.source_chunks : [];
+    if (ids.length === 0) return;
+    const modal = new bootstrap.Modal(document.getElementById('practiceSourceModal'));
+    const content = document.getElementById('practiceSourceContent');
+    content.innerHTML = '<div class="text-center py-3"><div class="spinner-border"></div></div>';
+    modal.show();
+    try {
+        const response = await fetch('{% url "sources" %}?ids=' + ids.join(','));
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || ('HTTP ' + response.status));
+        }
+        if (data.sources && data.sources.length > 0) {
+            let html = '';
+            data.sources.forEach((src) => {
+                html += `
+                    <div class="card mb-2">
+                        <div class="card-header">
+                            <strong>${src.file_name}${pageSuffix(src, ' · Page ')}</strong>
+                        </div>
+                        <div class="card-body">
+                            <pre class="mb-0 small">${src.text}</pre>
+                        </div>
+                    </div>
+                `;
+            });
+            content.innerHTML = html;
+        } else {
+            content.innerHTML = '<p class="text-muted">No source context available.</p>';
+        }
+    } catch (err) {
+        content.innerHTML = '<p class="text-danger">Error loading sources: ' + err.message + '</p>';
     }
 }
 

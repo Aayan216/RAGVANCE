@@ -4,6 +4,8 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
+from .sanitize import scrub_question
+
 TASK_TIMEOUT = 150
 
 
@@ -117,6 +119,7 @@ def run_generation(
     concurrency: int,
     log_label: str,
     shared_state: Optional[Dict[str, Any]] = None,
+    extra_validate: Optional[Callable[[Dict[str, Any]], bool]] = None,
 ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
     """Generate exactly `requested` valid questions using controlled concurrent batches.
 
@@ -126,6 +129,9 @@ def run_generation(
 
     Validation is type-aware (validate_question). Pass a shared_state dict to
     run multiple generations against one unified duplicate-detection set.
+    extra_validate is an optional post-structural predicate (e.g. practice
+    answer grounding); a False return or an exception rejects that question
+    without failing the run.
 
     Retry cap: total question slots requested from the LLM is bounded by
     2 x requested. Results are collected in submission order (deterministic).
@@ -180,8 +186,15 @@ def run_generation(
                 for mcq in results:
                     if len(valid) >= requested:
                         break
+                    mcq = scrub_question(mcq)
                     if not validate_question(mcq):
                         continue
+                    if extra_validate is not None:
+                        try:
+                            if not extra_validate(mcq):
+                                continue
+                        except Exception:
+                            continue
                     if is_duplicate(mcq, seen_normalized, seen_tokens):
                         continue
                     seen_normalized.add(_normalize_question(str(mcq["question"])))

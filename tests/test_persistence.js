@@ -224,7 +224,7 @@ console.log('--- tutor.html ---');
     ok('restore: 3 children (welcome + 2 messages)', env.getEl('chatContainer').children.length === 3);
     const withSources = env.state.created.filter(c => c.innerHTML.includes('Show Sources (1)'));
     ok('restore: sources button rebuilt via addMessage', withSources.length === 1);
-    ok('restore: source doc id rendered', withSources[0].innerHTML.includes('doc_13:chunk_4'));
+    ok('restore: source label rendered', withSources[0].innerHTML.includes('dc.pdf · Page 2'));
 
     // clear
     const btn = env.getEl('clearChatBtn');

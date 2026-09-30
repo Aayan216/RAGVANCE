@@ -1,12 +1,18 @@
 import os
 import json
 import re
+import itertools
 from typing import List, Dict, Any, Optional
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
 from django.conf import settings
 from .vector_store import VectorStore
 from .embedder import Embedder
+from .query_pool import build_section_queries
+from .llm_resilience import invoke_with_retry
+from .sanitize import scrub_citation_markers
+from .grounding import filter_supporting_results
+from .analytics import log_retrieval
 
 
 def _redact_secrets(text: str) -> str:
@@ -20,7 +26,11 @@ TUTOR_PROMPT = PromptTemplate(
     input_variables=["context", "question"],
     template="""You are a study assistant. Answer the question using ONLY the provided context.
 Give a direct, plain-text answer. No markdown. No bullet points. No bold. No formatting.
-Keep it short and to the point. If context doesn't have enough info, say "I don't have enough information about this."
+Keep it short and to the point.
+The context may contain sections from several documents; use whichever section actually addresses the question.
+If the question's premise contradicts the context (wrong fact, date, subject or edition), do not refuse.
+Answer by stating what the context actually says and briefly correct the premise.
+Refuse only when the context genuinely has no information about the question; then say "I don't have enough information about this."
 
 Context:
 {context}
@@ -100,6 +110,9 @@ Requirements:
 - Ground every question ONLY in the provided context; never invent facts,
   concepts, or details that are not in the context
 - Question should test understanding, not just memorization
+- "source_chunks": integers listing ONLY the context chunk ids [doc_N:chunk_M]
+  that support this question — the fewest chunks that justify the correct answer;
+  each question must cite its own supporting chunks, not every context chunk
 
 Output format (JSON only, no other text):
 {{
@@ -109,7 +122,8 @@ Output format (JSON only, no other text):
             "options": {{"A": "Option A", "B": "Option B", "C": "Option C", "D": "Option D"}},
             "correct": "A",
             "explanation": "Why the correct answer is right...",
-            "topic": "Topic name"
+            "topic": "Topic name",
+            "source_chunks": [13, 42]
         }}
     ]
 }}"""
@@ -132,6 +146,9 @@ Requirements:
 - Ground every question ONLY in the provided context; never invent facts,
   concepts, or details that are not in the context
 - Questions should test understanding, not just memorization
+- "source_chunks": integers listing ONLY the context chunk ids [doc_N:chunk_M]
+  that support this question — the fewest chunks that justify the correct answer;
+  each question must cite its own supporting chunks, not every context chunk
 
 Output format (JSON only, no other text):
 {{
@@ -141,7 +158,8 @@ Output format (JSON only, no other text):
             "options": {{"A": "Option A", "B": "Option B", "C": "Option C", "D": "Option D"}},
             "correct": "A",
             "explanation": "Why the correct answer is right...",
-            "topic": "Specific topic/concept"
+            "topic": "Specific topic/concept",
+            "source_chunks": [13, 42]
         }}
     ]
 }}"""
@@ -166,6 +184,9 @@ Requirements:
 - {difficulty} level: easy=basic recall, medium=application, hard=analysis/synthesis
 - Include an explanation grounded in the context for each statement
 - Tag each with a specific topic/concept
+- "source_chunks": integers listing ONLY the context chunk ids [doc_N:chunk_M]
+  that support or contradict this statement — the fewest chunks that suffice;
+  each statement must cite its own supporting chunks, not every context chunk
 
 Output format (JSON only, no other text):
 {{
@@ -176,7 +197,8 @@ Output format (JSON only, no other text):
             "options": {{"A": "True", "B": "False"}},
             "correct": "A",
             "explanation": "Explanation grounded in the context...",
-            "topic": "Specific topic/concept"
+            "topic": "Specific topic/concept",
+            "source_chunks": [13, 42]
         }}
     ]
 }}"""
@@ -198,6 +220,29 @@ class RAGChain:
             model=model_name,
         )
         self.top_k = getattr(settings, "TOP_K_RETRIEVAL", 5)
+        # Deterministic rotation over the corpus-derived query pool for mock and
+        # practice generation (thread-safe; persists across batches/requests so
+        # different generation runs advance through the pool instead of always
+        # restarting at seed 0).
+        self._mock_seed_counter = itertools.count()
+        self._practice_seed_counter = itertools.count()
+
+    def _next_pool_query(self, doc_ids: List[int], counter,
+                         offset_half: bool = False) -> Optional[str]:
+        """Corpus-derived retrieval query for one generation batch."""
+        pool = build_section_queries(self.vector_store, doc_ids)
+        if not pool:
+            return None
+        idx = next(counter)
+        if offset_half:
+            idx += len(pool) // 2
+        return pool[idx % len(pool)]
+
+    def next_practice_query(self, doc_ids: List[int] = None) -> Optional[str]:
+        return self._next_pool_query(doc_ids, self._practice_seed_counter)
+
+    def _next_mock_query(self, doc_ids: List[int] = None, offset_half: bool = False) -> Optional[str]:
+        return self._next_pool_query(doc_ids, self._mock_seed_counter, offset_half)
 
     @staticmethod
     def _extract_text(response) -> str:
@@ -214,9 +259,20 @@ class RAGChain:
             return " ".join(parts).strip()
         return str(content)
 
-    def _retrieve_context(self, query: str, doc_ids: List[int] = None) -> List[Dict[str, Any]]:
+    def _invoke(self, prompt):
+        return invoke_with_retry(self.llm, prompt)
+
+    def _retrieve_context(self, query: str, doc_ids: List[int] = None,
+                          operation: str = "retrieve") -> List[Dict[str, Any]]:
         query_emb = self.embedder.embed_query(query)
-        return self.vector_store.search(query_emb, k=self.top_k, doc_ids=doc_ids)
+        results = self.vector_store.search(query_emb, k=self.top_k, doc_ids=doc_ids)
+        log_retrieval(
+            operation,
+            [r.get("score") for r in results],
+            doc_ids=doc_ids,
+            docs=[r.get("doc_id") for r in results],
+        )
+        return results
 
     def _format_context(self, results: List[Dict[str, Any]]) -> str:
         parts = []
@@ -229,17 +285,18 @@ class RAGChain:
 
     def tutor_query(self, question: str) -> Dict[str, Any]:
         """Tutor mode: Answer question with citations."""
-        results = self._retrieve_context(question)
+        results = self._retrieve_context(question, operation="tutor")
         if not results:
             return {"answer": "No relevant documents found. Please upload study materials first.", "sources": []}
         
         context = self._format_context(results)
         prompt = TUTOR_PROMPT.format(context=context, question=question)
-        response = self.llm.invoke(prompt)
-        answer = self._extract_text(response)
+        response = self._invoke(prompt)
+        answer = scrub_citation_markers(self._extract_text(response))
         
+        supported = filter_supporting_results(answer, results)
         sources = []
-        for r in results:
+        for r in supported:
             sources.append({
                 "doc_id": r.get("doc_id"),
                 "chunk_index": r.get("chunk_index"),
@@ -266,13 +323,13 @@ class RAGChain:
     def generate_mcq(self, topic: str = None, difficulty: str = "medium", doc_ids: List[int] = None) -> Dict[str, Any]:
         """Practice mode: Generate MCQ from context."""
         query = topic or "key concepts"
-        results = self._retrieve_context(query, doc_ids=doc_ids)
+        results = self._retrieve_context(query, doc_ids=doc_ids, operation="practice")
         if not results:
             return {"error": "No content available. Upload documents first."}
         
         context = self._format_context(results)
         prompt = MCQ_PROMPT.format(context=context, topic=topic or "General", difficulty=difficulty)
-        response = self.llm.invoke(prompt)
+        response = self._invoke(prompt)
         raw_text = self._extract_text(response)
         clean_text = self._extract_json(raw_text)
         
@@ -285,13 +342,14 @@ class RAGChain:
 
     def generate_mock_question(self, difficulty: str = "medium", doc_ids: List[int] = None) -> Dict[str, Any]:
         """Mock test mode: Generate exam question."""
-        results = self._retrieve_context("important concepts for exam", doc_ids=doc_ids)
+        results = self._retrieve_context(self._next_mock_query(doc_ids), doc_ids=doc_ids,
+                                         operation="mock")
         if not results:
             return {"error": "No content available. Upload documents first."}
         
         context = self._format_context(results)
         prompt = MOCK_PROMPT.format(context=context, difficulty=difficulty)
-        response = self.llm.invoke(prompt)
+        response = self._invoke(prompt)
         raw_text = self._extract_text(response)
         clean_text = self._extract_json(raw_text)
         
@@ -318,6 +376,32 @@ class RAGChain:
             return []
         return [q for q in questions if isinstance(q, dict)][:expected]
 
+    @staticmethod
+    def _attach_sources(questions: List[Dict[str, Any]], results: List[Dict[str, Any]]) -> None:
+        """Per-question source attribution.
+
+        Keeps model-cited chunk ids that are integers within the retrieved set
+        (order-preserving, deduplicated); falls back to the whole retrieval
+        batch when a question cites nothing valid, so source_chunks is never
+        empty when retrieval returned results.
+        """
+        batch_ids = [r.get("faiss_id") for r in results]
+        allowed = {i for i in batch_ids if isinstance(i, int) and not isinstance(i, bool)}
+        for question in questions:
+            cited = question.get("source_chunks")
+            clean: List[int] = []
+            if isinstance(cited, list):
+                for item in cited:
+                    if isinstance(item, bool):
+                        continue
+                    try:
+                        fid = int(item)
+                    except (TypeError, ValueError):
+                        continue
+                    if fid in allowed and fid not in clean:
+                        clean.append(fid)
+            question["source_chunks"] = clean or list(batch_ids)
+
     def generate_mcq_batch(
         self,
         topic: str = None,
@@ -327,7 +411,7 @@ class RAGChain:
     ) -> List[Dict[str, Any]]:
         """Practice mode: generate multiple MCQs in one LLM call."""
         query = topic or "key concepts"
-        results = self._retrieve_context(query, doc_ids=doc_ids)
+        results = self._retrieve_context(query, doc_ids=doc_ids, operation="practice")
         if not results:
             return []
 
@@ -339,7 +423,7 @@ class RAGChain:
             count=count,
         )
         try:
-            response = self.llm.invoke(prompt)
+            response = self._invoke(prompt)
         except Exception as exc:
             print(
                 f"[ERROR] practice MCQ batch failed | batch_count={count} | doc_ids={doc_ids} | "
@@ -349,8 +433,7 @@ class RAGChain:
         raw_text = self._extract_text(response)
         clean_text = self._extract_json(raw_text)
         questions = self._parse_questions_list(clean_text, count)
-        for mcq in questions:
-            mcq["source_chunks"] = [r.get("faiss_id") for r in results]
+        self._attach_sources(questions, results)
         return questions
 
     def generate_mock_questions_batch(
@@ -365,11 +448,15 @@ class RAGChain:
         question_type is "mcq" or "true_false"; retrieval (FAISS + doc_ids
         filtering) is identical for both types.
         """
-        results = self._retrieve_context("important concepts for exam", doc_ids=doc_ids)
+        is_true_false = question_type == "true_false"
+        results = self._retrieve_context(
+            self._next_mock_query(doc_ids, offset_half=is_true_false),
+            doc_ids=doc_ids,
+            operation="mock",
+        )
         if not results:
             return []
 
-        is_true_false = question_type == "true_false"
         prompt_template = TRUE_FALSE_BATCH_PROMPT if is_true_false else MOCK_BATCH_PROMPT
         context = self._format_context(results)
         prompt = prompt_template.format(
@@ -378,7 +465,7 @@ class RAGChain:
             count=count,
         )
         try:
-            response = self.llm.invoke(prompt)
+            response = self._invoke(prompt)
         except Exception as exc:
             print(
                 f"[ERROR] mock {'true_false' if is_true_false else 'MCQ'} batch failed | batch_count={count} | doc_ids={doc_ids} | "
@@ -390,5 +477,5 @@ class RAGChain:
         questions = self._parse_questions_list(clean_text, count)
         for question in questions:
             question["question_type"] = question_type
-            question["source_chunks"] = [r.get("faiss_id") for r in results]
+        self._attach_sources(questions, results)
         return questions

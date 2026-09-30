@@ -7,6 +7,7 @@ urlpatterns = [
     path("delete/<int:doc_id>/", views.delete_document_view, name="delete_document"),
     path("tutor/", views.tutor_view, name="tutor"),
     path("tutor/ask/", views.tutor_ask_view, name="tutor_ask"),
+    path("sources/", views.sources_view, name="sources"),
     path("practice/", views.practice_view, name="practice"),
     path("practice/generate/", views.practice_generate_view, name="practice_generate"),
     path("practice/submit/", views.practice_submit_view, name="practice_submit"),

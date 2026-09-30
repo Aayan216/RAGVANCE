@@ -119,6 +119,11 @@
 
 {% block extra_js %}
 <script>
+function pageSuffix(src, sep) {
+    const isTxt = String(src.file_name || '').toLowerCase().endsWith('.txt');
+    return (!isTxt && src.page_number) ? `${sep}${src.page_number}` : '';
+}
+
 async function showSources(chunkIds) {
     const modal = new bootstrap.Modal(document.getElementById('sourceModal'));
     const content = document.getElementById('sourceContent');
@@ -126,24 +131,18 @@ async function showSources(chunkIds) {
     modal.show();
     
     try {
-        const response = await fetch('{% url "tutor_ask" %}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-            },
-            body: JSON.stringify({ question: 'Show source context for chunks: ' + chunkIds.join(',') })
-        });
-        
+        const response = await fetch('{% url "sources" %}?ids=' + chunkIds.join(','));
         const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || ('HTTP ' + response.status));
+        }
         if (data.sources && data.sources.length > 0) {
             let html = '';
-            data.sources.forEach((src, i) => {
+            data.sources.forEach((src) => {
                 html += `
                     <div class="card mb-2">
                         <div class="card-header">
-                            <strong>[doc_${src.doc_id}:chunk_${src.chunk_index}]</strong> 
-                            ${src.file_name} (Page ${src.page_number})
+                            <strong>${src.file_name}${pageSuffix(src, ' · Page ')}</strong>
                         </div>
                         <div class="card-body">
                             <pre class="mb-0 small">${src.text}</pre>
