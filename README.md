@@ -14,6 +14,33 @@ This repository is the **tested Phase 1–5 release** (see [audit reports](#audi
 - **Gemini resilience** — automatic retry with exponential backoff on rate limits / transient errors
 - **Answer-supporting source filter** — tutor responses cite only chunks that actually support the answer (1–3 chunks)
 
+## Quick Start
+
+For a new user:
+
+1. Clone and install:
+
+   ```bash
+   git clone https://github.com/Aayan216/RAGVANCE.git
+   cd RAGVANCE
+   uv sync
+   ```
+
+2. Create `.env` from `.env.example` and add your own `GEMINI_API_KEY`.
+
+3. Run:
+
+   ```bash
+   uv run python manage.py migrate
+   uv run python manage.py runserver
+   ```
+
+4. Open: http://127.0.0.1:8000/
+
+5. First use: **Upload → Process → Tutor / Practice / Mock Test**
+
+Documents must be processed before they can be searched. A fresh clone starts with an empty local FAISS index.
+
 ## Tech Stack
 
 - Django 5.x (Python 3.12+)
