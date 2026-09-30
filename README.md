@@ -27,7 +27,7 @@ This repository is the **tested Phase 1–5 release** (see [audit reports](#audi
 - **[uv](https://docs.astral.sh/uv/)** — dependency/environment manager (uses `uv.lock`)
 - **Node.js** — only for the JavaScript regression suites
 - **Git**
-- **Google Gemini API key** — free tier works (quota shared across live tests)
+- **Your own Google Gemini API key** — this project ships **no API keys**; you must create and use your own (free tier works)
 
 ## Environment Setup
 
@@ -48,6 +48,8 @@ uv sync            # creates .venv and installs all dependencies from uv.lock
 
 ## `.env` Setup (required)
 
+**Bring your own API keys.** This repository contains **no API keys** — no shared, embedded, or default Google key. Every user must create and use their **own** Google Gemini API key (free at [Google AI Studio](https://aistudio.google.com/apikey)). The same applies to any other API key you ever add to `.env`: use your own, keep it only in your local `.env` (gitignored), and never commit it.
+
 Create a `.env` file in the project root:
 
 ```env
@@ -58,7 +60,7 @@ DEBUG=True
 
 | Key | Required | Purpose |
 |-----|----------|---------|
-| `GEMINI_API_KEY` | **Yes** | Google Gemini API access for tutor/practice/mock generation |
+| `GEMINI_API_KEY` | **Yes** | Your own Google Gemini API key (not provided by this project) — used for tutor/practice/mock generation |
 | `DJANGO_SECRET_KEY` | Recommended | Django signing secret (falls back to a dev placeholder) |
 | `DEBUG` | Optional | `True` in development; `False` would be for production |
 
