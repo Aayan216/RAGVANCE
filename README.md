@@ -24,7 +24,7 @@ This repository is the **tested Phase 1–5 release** (see [audit reports](#audi
 ## Prerequisites
 
 - **Python 3.12+**
-- **[uv](https://docs.astral.sh/uv/)** — dependency/environment manager (uses `uv.lock`)
+- **[uv](https://docs.astral.sh/uv/)** — dependency/environment manager (uses `uv.lock`); or plain **pip** with the provided `requirements.txt`
 - **Node.js** — only for the JavaScript regression suites
 - **Git**
 - **Your own Google Gemini API key** — this project ships **no API keys**; you must create and use your own (free tier works)
@@ -39,7 +39,28 @@ uv sync            # creates .venv and installs all dependencies from uv.lock
 
 ## Installing Dependencies
 
-`uv sync` installs everything declared in `pyproject.toml`:
+**Option A — uv (recommended):**
+
+```bash
+uv sync            # installs everything declared in pyproject.toml, locked by uv.lock
+```
+
+**Option B — pip:**
+
+```bash
+python -m venv .venv
+# Windows:  .venv\Scripts\activate
+# macOS/Linux:  source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+`requirements.txt` lists all runtime dependencies with pinned `==` versions and `# via` comments (showing why each package is needed). It is auto-generated from `uv.lock` — regenerate it with:
+
+```bash
+uv export --no-hashes --no-dev --no-emit-project -o requirements.txt
+```
+
+Key packages installed either way:
 
 - `django`, `langchain`, `langchain-community`, `langchain-core`, `langchain-google-genai`
 - `faiss-cpu`, `sentence-transformers`
