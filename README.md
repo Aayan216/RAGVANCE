@@ -275,3 +275,10 @@ RAGVANCE/
 | `.venv/`, `staticfiles/`, `__pycache__/`, `*.pyc` | Environment/build artifacts |
 | `logs/` | Runtime logs |
 | `audit/*.py`, `audit/ground_truth.json`, `audit/corpus/`, `audit/logs/` | Audit harness scripts, test corpus, and raw battery logs kept local; the **audit report `.md` files are committed** |
+
+---
+
+## Author
+
+**Mohammed Aayan**  
+B.Tech — Computer Science & Information Technology
