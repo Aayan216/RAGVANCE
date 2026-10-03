@@ -1,12 +1,33 @@
-# RAGVANCE - AI Study Assistant
+# RAGVANCE — AI Study Assistant
 
-## Live Demo
+> **Your documents. Your knowledge base. Your AI study partner.**
 
-[Open RAGVANCE](https://ragvance.onrender.com)
+RAGVANCE is a **Retrieval-Augmented Generation (RAG)** study assistant that turns your own study materials into an interactive learning environment. Upload your documents, ask questions, practise MCQs, or take timed mock exams — with responses grounded in your uploaded content and backed by **per-question source citations**.
 
-An AI-powered study assistant with RAG (Retrieval-Augmented Generation) capabilities. Upload your study documents, then ask questions, practise MCQs, or take timed mock tests — every generated answer is grounded in *your* documents with per-question source citations.
+### 🚀 Live Demo
 
-This repository is the **tested Phase 1–5 release** (see [audit reports](#audit-reports)): **782/782 automated checks green**, grounded-practice at 220/220, and 0 false tutor refusals across repeated live batteries.
+**[Open RAGVANCE →](https://ragvance.onrender.com)**
+
+### ✨ What You Can Do
+
+| Mode | Purpose |
+|---|---|
+| 📚 **Tutor** | Ask questions and receive grounded explanations from your study material |
+| 📝 **Practice** | Generate topic-focused MCQs with immediate feedback and source citations |
+| 🎯 **Mock Test** | Take timed, exam-style tests with results, analysis, and answer review |
+| 📄 **Sources** | Inspect the exact document passages used to support generated answers |
+
+### 📊 Project Validation
+
+- **782 / 782** automated checks passing
+- **220 / 220** practice questions passed grounding validation
+- **0** false tutor refusals across repeated live test batteries
+- **Per-question source citations** with direct source retrieval
+- **Transient Gemini errors** handled with automatic retry and backoff
+
+> **Status:** This repository represents the tested **Phase 1–5 release**. See the [audit reports](#audit-reports) for the validation details.
+
+---
 
 ## Features
 
