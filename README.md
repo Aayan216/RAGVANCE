@@ -1,5 +1,9 @@
 # RAGVANCE - AI Study Assistant
 
+## Live Demo
+
+[Open RAGVANCE](https://ragvance.onrender.com)
+
 An AI-powered study assistant with RAG (Retrieval-Augmented Generation) capabilities. Upload your study documents, then ask questions, practise MCQs, or take timed mock tests — every generated answer is grounded in *your* documents with per-question source citations.
 
 This repository is the **tested Phase 1–5 release** (see [audit reports](#audit-reports)): **782/782 automated checks green**, grounded-practice at 220/220, and 0 false tutor refusals across repeated live batteries.
